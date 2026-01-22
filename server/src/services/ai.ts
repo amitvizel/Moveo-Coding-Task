@@ -1,0 +1,144 @@
+import axios from 'axios';
+
+const HUGGINGFACE_API_URL = 'https://api-inference.huggingface.co/models/mistralai/Mixtral-8x7B-Instruct-v0.1';
+
+export interface UserPreferences {
+  favoriteCoins: string[];
+  investorType: string;
+  contentPreferences: string[];
+}
+
+export interface MarketData {
+  prices: Record<string, { usd: number; usd_24h_change: number }>;
+  newsCount: number;
+  topNewsTitle?: string;
+}
+
+export class AIService {
+  /**
+   * Generate a personalized AI insight based on user preferences and market data.
+   * @param userPreferences User's saved preferences
+   * @param marketData Current market data (prices, news)
+   * @returns A personalized insight string
+   */
+  static async generateInsight(
+    userPreferences: UserPreferences,
+    marketData: MarketData
+  ): Promise<string> {
+    const apiKey = process.env.HUGGINGFACE_API_KEY;
+
+    if (!apiKey) {
+      console.warn('HUGGINGFACE_API_KEY is not set. Returning fallback insight.');
+      return this.getFallbackInsight(userPreferences, marketData);
+    }
+
+    try {
+      const prompt = this.buildPrompt(userPreferences, marketData);
+
+      const response = await axios.post(
+        HUGGINGFACE_API_URL,
+        {
+          inputs: prompt,
+          parameters: {
+            max_new_tokens: 150,
+            temperature: 0.7,
+            top_p: 0.95,
+            return_full_text: false,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 30000, // 30 second timeout
+        }
+      );
+
+      // Extract the generated text
+      const generatedText = response.data[0]?.generated_text || '';
+      
+      // Clean up the response
+      return this.cleanResponse(generatedText);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Error calling Hugging Face API:', error.message, error.response?.data);
+      } else {
+        console.error('Error generating AI insight:', error);
+      }
+      return this.getFallbackInsight(userPreferences, marketData);
+    }
+  }
+
+  /**
+   * Build the prompt for the LLM based on user preferences and market data.
+   */
+  private static buildPrompt(
+    userPreferences: UserPreferences,
+    marketData: MarketData
+  ): string {
+    const { favoriteCoins, investorType, contentPreferences } = userPreferences;
+    const { prices, newsCount, topNewsTitle } = marketData;
+
+    // Build price summary
+    let priceSummary = '';
+    for (const [coinId, data] of Object.entries(prices)) {
+      const change = data.usd_24h_change > 0 ? '+' : '';
+      priceSummary += `${coinId}: $${data.usd.toFixed(2)} (${change}${data.usd_24h_change.toFixed(2)}%), `;
+    }
+
+    const prompt = `You are a crypto market advisor. Generate a brief, personalized daily insight (2-3 sentences) for a ${investorType} investor.
+
+User's favorite coins: ${favoriteCoins.join(', ')}
+Current prices: ${priceSummary}
+Latest news: ${topNewsTitle || 'No major news today'}
+User interests: ${contentPreferences.join(', ')}
+
+Provide a concise insight about market trends or opportunities. Be professional but friendly.`;
+
+    return prompt;
+  }
+
+  /**
+   * Clean up the AI response by removing extra whitespace and truncating if needed.
+   */
+  private static cleanResponse(text: string): string {
+    return text
+      .trim()
+      .replace(/\n+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .substring(0, 500); // Limit to 500 characters
+  }
+
+  /**
+   * Fallback insight when API is unavailable or fails.
+   */
+  private static getFallbackInsight(
+    userPreferences: UserPreferences,
+    marketData: MarketData
+  ): string {
+    const { favoriteCoins } = userPreferences;
+    const { prices } = marketData;
+
+    // Simple analysis based on price changes
+    const changes = Object.entries(prices).map(([id, data]) => ({
+      id,
+      change: data.usd_24h_change,
+    }));
+
+    if (changes.length === 0) {
+      return `Stay informed! Keep an eye on ${favoriteCoins.join(', ')} for potential opportunities.`;
+    }
+
+    const bestPerformer = changes.reduce((a, b) => (a.change > b.change ? a : b));
+    const worstPerformer = changes.reduce((a, b) => (a.change < b.change ? a : b));
+
+    if (bestPerformer.change > 5) {
+      return `${bestPerformer.id.toUpperCase()} is up ${bestPerformer.change.toFixed(2)}% today! Consider reviewing your portfolio allocation.`;
+    } else if (worstPerformer.change < -5) {
+      return `${worstPerformer.id.toUpperCase()} is down ${Math.abs(worstPerformer.change).toFixed(2)}% today. This could be a buying opportunity if you believe in the fundamentals.`;
+    } else {
+      return `Markets are relatively stable today. Your tracked coins (${favoriteCoins.join(', ')}) are showing moderate movement.`;
+    }
+  }
+}
