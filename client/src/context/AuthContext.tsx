@@ -1,12 +1,18 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import client from '../api/client';
 
-// Define the User interface matching the backend model (excluding sensitive fields like passwordHash)
+export interface UserPreferences {
+  favoriteCoins: string[];
+  riskTolerance: 'conservative' | 'moderate' | 'aggressive';
+  contentFocus: ('news' | 'technical' | 'memes')[];
+}
+
+// Define the User interface matching the backend model
 export interface User {
   id: string;
   email: string;
   name?: string;
-  preferences?: any;
+  preferences?: UserPreferences | null;
 }
 
 interface AuthContextType {
@@ -17,6 +23,7 @@ interface AuthContextType {
   login: (token: string, user: User) => void;
   logout: () => void;
   updateUser: (user: User) => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -62,10 +69,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(updatedUser);
   };
 
+  const refreshUser = async () => {
+    if (!token) return;
+    try {
+      const response = await client.get('/user/me');
+      updateUser(response.data.user);
+    } catch (error) {
+      console.error('Failed to refresh user', error);
+      // Optional: logout if token is invalid
+    }
+  };
+
   const isAuthenticated = !!token;
 
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated, isLoading, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, token, isAuthenticated, isLoading, login, logout, updateUser, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
