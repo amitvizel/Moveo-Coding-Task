@@ -24,6 +24,8 @@ interface DashboardData {
 }
 
 const CACHE_DURATION = 60000; // 60 seconds
+const MEME_STORAGE_KEY = 'crypto_advisor_daily_meme';
+const MEME_DATE_KEY = 'crypto_advisor_meme_date';
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -31,6 +33,34 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [lastFetch, setLastFetch] = useState<number>(0);
+
+  const getTodayDate = (): string => {
+    return new Date().toISOString().split('T')[0]!;
+  };
+
+  const getCachedMeme = (): DashboardData['meme'] | null => {
+    const cachedDate = localStorage.getItem(MEME_DATE_KEY);
+    const today = getTodayDate();
+    
+    if (cachedDate === today) {
+      const cachedMeme = localStorage.getItem(MEME_STORAGE_KEY);
+      if (cachedMeme) {
+        try {
+          return JSON.parse(cachedMeme);
+        } catch (e) {
+          console.error('Failed to parse cached meme:', e);
+        }
+      }
+    }
+    return null;
+  };
+
+  const setCachedMeme = (meme: DashboardData['meme']) => {
+    if (meme) {
+      localStorage.setItem(MEME_STORAGE_KEY, JSON.stringify(meme));
+      localStorage.setItem(MEME_DATE_KEY, getTodayDate());
+    }
+  };
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -48,11 +78,36 @@ const Dashboard: React.FC = () => {
         setLoading(true);
         setError('');
         const response = await client.get('/dashboard/data');
-        setData(response.data);
+        
+        // Always check for cached meme first (persists across refreshes)
+        const cachedMeme = getCachedMeme();
+        const memeToUse = cachedMeme || response.data.meme;
+        
+        // If we got a new meme from API and don't have cached one, cache it
+        if (response.data.meme && !cachedMeme) {
+          console.log('[Dashboard] Caching new meme for today');
+          setCachedMeme(response.data.meme);
+        } else if (cachedMeme) {
+          console.log('[Dashboard] Using cached meme from localStorage');
+        }
+        
+        // Merge API data with cached meme
+        const dashboardData = {
+          ...response.data,
+          meme: memeToUse,
+        };
+        
+        setData(dashboardData);
         setLastFetch(now);
       } catch (err: any) {
         console.error('Failed to fetch dashboard data:', err);
         setError(err.response?.data?.error || 'Failed to load dashboard');
+        
+        // On error, try to load cached meme if available
+        const cachedMeme = getCachedMeme();
+        if (cachedMeme && data) {
+          setData({ ...data, meme: cachedMeme });
+        }
       } finally {
         setLoading(false);
       }
@@ -88,50 +143,20 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  const handleRefresh = () => {
-    setLastFetch(0); // Reset timestamp to force refresh
-    setData(null); // Clear data to show loading
-  };
-
-  const getTimeSinceUpdate = () => {
-    if (!lastFetch) return '';
-    const seconds = Math.floor((Date.now() - lastFetch) / 1000);
-    if (seconds < 60) return `Updated ${seconds}s ago`;
-    const minutes = Math.floor(seconds / 60);
-    return `Updated ${minutes}m ago`;
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Crypto Advisor Dashboard
-            </h1>
-            {lastFetch > 0 && (
-              <p className="text-sm text-gray-500 mt-1">
-                {getTimeSinceUpdate()}
-              </p>
-            )}
-          </div>
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={handleRefresh}
-              disabled={loading}
-              className="px-4 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center"
-            >
-              <span className="mr-2">🔄</span>
-              {loading ? 'Refreshing...' : 'Refresh'}
-            </button>
-            <button
-              onClick={logout}
-              className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-            >
-              Logout
-            </button>
-          </div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Crypto Advisor Dashboard
+          </h1>
+          <button
+            onClick={logout}
+            className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+          >
+            Logout
+          </button>
         </div>
       </header>
 
@@ -144,9 +169,6 @@ const Dashboard: React.FC = () => {
           </h2>
           <p className="text-gray-500 mt-1">
             Here's your personalized crypto market overview
-            <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-              Auto-refreshes every 60s
-            </span>
           </p>
         </div>
 
