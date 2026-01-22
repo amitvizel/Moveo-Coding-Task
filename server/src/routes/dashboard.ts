@@ -4,7 +4,7 @@ import { CoinGeckoService } from '../services/coingecko.js';
 import { CryptoPanicService } from '../services/cryptopanic.js';
 import { MemeService } from '../services/meme.js';
 import { AIService } from '../services/ai.js';
-import { CacheService } from '../services/cache.js';
+import { CacheService, CACHE_TTL_MS, MEME_CACHE_TTL_MS, CacheType } from '../services/cache.js';
 import prisma from '../prisma.js';
 
 const router = express.Router();
@@ -17,15 +17,6 @@ router.get('/data', authenticateToken, async (req: AuthRequest, res) => {
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
-    // Check cache first
-    const cachedData = await CacheService.getCachedData(userId);
-    if (cachedData) {
-      console.log('[Dashboard] Returning cached data for user:', userId);
-      return res.json(cachedData);
-    }
-
-    console.log('[Dashboard] Cache miss or stale, fetching fresh data for user:', userId);
-
     // Fetch user preferences to get favorite coins
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -36,27 +27,74 @@ router.get('/data', authenticateToken, async (req: AuthRequest, res) => {
     const favoriteCoins = preferences.favoriteCoins || [];
     const investorType = preferences.investorType || 'moderate';
     const contentPreferences = preferences.contentPreferences || [];
-    
-    // Fetch prices, news, and meme in parallel
-    const [prices, news, meme] = await Promise.all([
-      favoriteCoins.length > 0 ? CoinGeckoService.getPrices(favoriteCoins) : Promise.resolve({}),
-      CryptoPanicService.getNews(favoriteCoins),
-      MemeService.getMeme()
-    ]);
 
-    // Generate AI insight based on user preferences and market data
-    const aiInsight = await AIService.generateInsight(
-      {
-        favoriteCoins,
-        investorType,
-        contentPreferences,
-      },
-      {
-        prices,
-        newsCount: news.length,
-        topNewsTitle: news[0]?.title,
+    // Check cache for each data type and fetch if stale or missing
+    let prices = await CacheService.getCachedDataByType(userId, CacheType.prices, CACHE_TTL_MS);
+    let news = await CacheService.getCachedDataByType(userId, CacheType.news, CACHE_TTL_MS);
+    let meme = await CacheService.getCachedDataByType(userId, CacheType.meme, MEME_CACHE_TTL_MS);
+    let aiInsight = await CacheService.getCachedDataByType(userId, CacheType.aiInsight, CACHE_TTL_MS);
+
+    // Fetch prices if cache is stale or missing
+    if (!prices) {
+      console.log('[Dashboard] Fetching prices for user:', userId);
+      prices = favoriteCoins.length > 0 
+        ? await CoinGeckoService.getPrices(favoriteCoins) 
+        : {};
+      await CacheService.setCachedDataByType(userId, CacheType.prices, prices);
+    } else {
+      console.log('[Dashboard] Using cached prices for user:', userId);
+    }
+
+    // Fetch news if cache is stale or missing
+    if (!news) {
+      console.log('[Dashboard] Fetching news for user:', userId);
+      news = await CryptoPanicService.getNews(favoriteCoins);
+      await CacheService.setCachedDataByType(userId, CacheType.news, news);
+    } else {
+      console.log('[Dashboard] Using cached news for user:', userId);
+    }
+
+    // Fetch meme if cache is stale or missing
+    if (!meme) {
+      console.log('[Dashboard] Fetching meme for user:', userId);
+      meme = await MemeService.getMeme();
+      await CacheService.setCachedDataByType(userId, CacheType.meme, meme);
+    } else {
+      console.log('[Dashboard] Using cached meme for user:', userId);
+    }
+
+    // Fetch AI insight if cache is stale or missing
+    // Note: AI insight depends on prices and news, so we need fresh data
+    if (!aiInsight) {
+      console.log('[Dashboard] Generating AI insight for user:', userId);
+      const insightText = await AIService.generateInsight(
+        {
+          favoriteCoins,
+          investorType,
+          contentPreferences,
+        },
+        {
+          prices,
+          newsCount: news.length,
+          topNewsTitle: news[0]?.title,
+        }
+      );
+      // Store as JSON object, not plain string
+      const insightObject = { insight: insightText };
+      await CacheService.setCachedDataByType(userId, CacheType.aiInsight, insightObject);
+      aiInsight = insightText;
+    } else {
+      console.log('[Dashboard] Using cached AI insight for user:', userId);
+      // Handle both object format (new) and string format (old) for backward compatibility
+      if (typeof aiInsight === 'object' && aiInsight !== null && 'insight' in aiInsight) {
+        aiInsight = (aiInsight as { insight: string }).insight;
+      } else if (typeof aiInsight === 'string') {
+        // Already a string, use as-is
+        aiInsight = aiInsight;
+      } else {
+        aiInsight = null;
       }
-    );
+    }
 
     const dashboardData = {
       prices,
@@ -64,9 +102,6 @@ router.get('/data', authenticateToken, async (req: AuthRequest, res) => {
       meme,
       aiInsight
     };
-
-    // Store in cache
-    await CacheService.setCachedData(userId, dashboardData);
 
     res.json(dashboardData);
   } catch (error) {
