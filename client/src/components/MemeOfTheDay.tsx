@@ -1,4 +1,5 @@
 import React from 'react';
+import FeedbackButtons, { FeedbackContentType } from './FeedbackButtons';
 
 interface MemeData {
   title: string;
@@ -29,28 +30,34 @@ const MemeOfTheDay: React.FC<MemeOfTheDayProps> = ({ meme }) => {
       
       <div className="relative p-6 flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-center mb-4">
-          <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mr-3 shadow-sm">
-            <svg 
-              className="w-5 h-5 text-white" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" 
-              />
-            </svg>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mr-3 shadow-sm">
+              <svg 
+                className="w-5 h-5 text-white" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" 
+                />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                Meme of the Day
+              </h3>
+              <p className="text-xs text-gray-500">Daily dose of fun</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-              Meme of the Day
-            </h3>
-            <p className="text-xs text-gray-500">Daily dose of fun</p>
-          </div>
+          <FeedbackButtons 
+            contentType={FeedbackContentType.MEME} 
+            contentId={new Date().toISOString().split('T')[0]} 
+          />
         </div>
 
         {/* Content */}

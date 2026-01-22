@@ -1,4 +1,5 @@
 import React from 'react';
+import FeedbackButtons, { FeedbackContentType } from './FeedbackButtons';
 
 interface NewsItem {
   id: number;
@@ -58,23 +59,29 @@ const MarketNews: React.FC<MarketNewsProps> = ({ news }) => {
                 </span>
               </div>
             </div>
-            {hasUrl && (
-              <div className="flex-shrink-0 text-gray-400 hover:text-blue-600">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                  />
-                </svg>
-              </div>
-            )}
+            <div className="flex flex-col items-end space-y-2 flex-shrink-0">
+              {hasUrl && (
+                <div className="text-gray-400 hover:text-blue-600">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
+                  </svg>
+                </div>
+              )}
+              <FeedbackButtons 
+                contentType={FeedbackContentType.NEWS} 
+                contentId={item.id.toString()} 
+              />
+            </div>
           </div>
         );
 

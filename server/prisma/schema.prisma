@@ -17,6 +17,18 @@ enum CacheType {
   aiInsight
 }
 
+enum FeedbackContentType {
+  NEWS
+  AI_INSIGHT
+  MEME
+  COIN_PRICE
+}
+
+enum VoteType {
+  UP
+  DOWN
+}
+
 model User {
   id            String           @id @default(uuid())
   email         String           @unique
@@ -26,6 +38,7 @@ model User {
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
   dashboardCache DashboardCache[]
+  feedback      Feedback[]
 }
 
 model DashboardCache {
@@ -41,4 +54,17 @@ model DashboardCache {
   
   @@unique([userId, cacheType])
   @@index([userId, cacheType, fetchedAt])
+}
+
+model Feedback {
+  id          String              @id @default(uuid())
+  userId      String
+  contentType FeedbackContentType
+  contentId   String              // ID of news, or date/hash for daily content
+  vote        VoteType
+  createdAt   DateTime            @default(now())
+
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, contentType])
 }
