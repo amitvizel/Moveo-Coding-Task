@@ -4,6 +4,7 @@ import client from '../api/client';
 import CoinPrices from '../components/CoinPrices';
 import MarketNews from '../components/MarketNews';
 import AIInsight from '../components/AIInsight';
+import MemeOfTheDay from '../components/MemeOfTheDay';
 
 interface DashboardData {
   prices: Record<string, { usd: number; usd_24h_change: number }>;
@@ -197,18 +198,8 @@ const Dashboard: React.FC = () => {
             <AIInsight insight={data?.aiInsight || null} />
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Meme of the Day</h3>
-            {data?.meme && (
-              <div>
-                <p className="text-sm text-gray-600 mb-2">{data.meme.title}</p>
-                <img 
-                  src={data.meme.url} 
-                  alt={data.meme.title}
-                  className="w-full h-48 object-contain"
-                />
-              </div>
-            )}
+          <div className="h-full">
+            <MemeOfTheDay meme={data?.meme || null} />
           </div>
         </div>
       </main>
