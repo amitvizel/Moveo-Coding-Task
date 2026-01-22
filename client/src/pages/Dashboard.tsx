@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
 import CoinPrices from '../components/CoinPrices';
 import MarketNews from '../components/MarketNews';
+import AIInsight from '../components/AIInsight';
 
 interface DashboardData {
   prices: Record<string, { usd: number; usd_24h_change: number }>;
@@ -169,9 +170,9 @@ const Dashboard: React.FC = () => {
             <MarketNews news={data?.news || []} />
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">AI Insight</h3>
-            <p className="text-gray-700">{data?.aiInsight}</p>
+          {/* AI Insight Component */}
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <AIInsight insight={data?.aiInsight || null} />
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow">
