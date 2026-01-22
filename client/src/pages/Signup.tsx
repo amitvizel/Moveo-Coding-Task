@@ -17,7 +17,8 @@ const Signup: React.FC = () => {
       navigate('/login');
     } catch (err: any) {
       console.error('Signup failed', err);
-      setError(err.response?.data?.message || 'Signup failed');
+      // Backend returns { error: 'Message' }, so we check err.response.data.error
+      setError(err.response?.data?.error || 'Signup failed');
     }
   };
 
