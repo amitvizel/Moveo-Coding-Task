@@ -19,7 +19,8 @@ const Login: React.FC = () => {
       navigate('/');
     } catch (err: any) {
       console.error('Login failed', err);
-      setError(err.response?.data?.message || 'Login failed');
+      // Backend returns { error: 'Message' }, so we check err.response.data.error
+      setError(err.response?.data?.error || 'Login failed');
     }
   };
 
