@@ -3,6 +3,7 @@ import { authenticateToken, type AuthRequest } from '../middleware/auth.js';
 import { CoinGeckoService } from '../services/coingecko.js';
 import { CryptoPanicService } from '../services/cryptopanic.js';
 import { MemeService } from '../services/meme.js';
+import { AIService } from '../services/ai.js';
 import prisma from '../prisma.js';
 
 const router = express.Router();
@@ -21,7 +22,10 @@ router.get('/data', authenticateToken, async (req: AuthRequest, res) => {
       select: { preferences: true },
     });
 
-    const favoriteCoins = (user?.preferences as any)?.favoriteCoins || [];
+    const preferences = (user?.preferences as any) || {};
+    const favoriteCoins = preferences.favoriteCoins || [];
+    const investorType = preferences.investorType || 'moderate';
+    const contentPreferences = preferences.contentPreferences || [];
     
     // Fetch prices, news, and meme in parallel
     const [prices, news, meme] = await Promise.all([
@@ -30,12 +34,25 @@ router.get('/data', authenticateToken, async (req: AuthRequest, res) => {
       MemeService.getMeme()
     ]);
 
+    // Generate AI insight based on user preferences and market data
+    const aiInsight = await AIService.generateInsight(
+      {
+        favoriteCoins,
+        investorType,
+        contentPreferences,
+      },
+      {
+        prices,
+        newsCount: news.length,
+        topNewsTitle: news[0]?.title,
+      }
+    );
+
     res.json({
       prices,
       news,
       meme,
-      // Placeholder for AI service we'll add later
-      aiInsight: null
+      aiInsight
     });
   } catch (error) {
     console.error('Error fetching dashboard data:', error);

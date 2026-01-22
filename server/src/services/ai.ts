@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const HUGGINGFACE_API_URL = 'https://api-inference.huggingface.co/models/mistralai/Mixtral-8x7B-Instruct-v0.1';
+// Using Hugging Face Router API (OpenAI-compatible format)
+const HUGGINGFACE_API_URL = 'https://router.huggingface.co/v1/chat/completions';
+const HUGGINGFACE_MODEL = 'meta-llama/Llama-3.3-70B-Instruct';
 
 export interface UserPreferences {
   favoriteCoins: string[];
@@ -11,7 +13,7 @@ export interface UserPreferences {
 export interface MarketData {
   prices: Record<string, { usd: number; usd_24h_change: number }>;
   newsCount: number;
-  topNewsTitle?: string;
+  topNewsTitle: string | undefined;
 }
 
 export class AIService {
@@ -28,23 +30,30 @@ export class AIService {
     const apiKey = process.env.HUGGINGFACE_API_KEY;
 
     if (!apiKey) {
-      console.warn('HUGGINGFACE_API_KEY is not set. Returning fallback insight.');
+      console.log('[AIService] HUGGINGFACE_API_KEY is not set. Using fallback insight.');
       return this.getFallbackInsight(userPreferences, marketData);
     }
 
+    console.log('[AIService] API key found, calling Hugging Face API...');
+
     try {
       const prompt = this.buildPrompt(userPreferences, marketData);
+      console.log('[AIService] Prompt:', prompt.substring(0, 200) + '...');
 
+      const startTime = Date.now();
       const response = await axios.post(
         HUGGINGFACE_API_URL,
         {
-          inputs: prompt,
-          parameters: {
-            max_new_tokens: 150,
-            temperature: 0.7,
-            top_p: 0.95,
-            return_full_text: false,
-          },
+          model: HUGGINGFACE_MODEL,
+          messages: [
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
+          max_tokens: 150,
+          temperature: 0.7,
+          top_p: 0.95,
         },
         {
           headers: {
@@ -54,18 +63,35 @@ export class AIService {
           timeout: 30000, // 30 second timeout
         }
       );
+      const duration = Date.now() - startTime;
 
-      // Extract the generated text
-      const generatedText = response.data[0]?.generated_text || '';
+      console.log(`[AIService] API call successful (${duration}ms)`);
+      console.log('[AIService] Response:', JSON.stringify(response.data).substring(0, 300));
+
+      // Extract the generated text from OpenAI-compatible format
+      const generatedText = response.data.choices?.[0]?.message?.content || '';
       
+      if (!generatedText) {
+        console.warn('[AIService] No generated text in response, using fallback');
+        return this.getFallbackInsight(userPreferences, marketData);
+      }
+
       // Clean up the response
-      return this.cleanResponse(generatedText);
+      const cleanedText = this.cleanResponse(generatedText);
+      console.log('[AIService] Generated insight:', cleanedText);
+      return cleanedText;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error('Error calling Hugging Face API:', error.message, error.response?.data);
+        console.error('[AIService] Hugging Face API Error:', {
+          message: error.message,
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+        });
       } else {
-        console.error('Error generating AI insight:', error);
+        console.error('[AIService] Error generating AI insight:', error);
       }
+      console.log('[AIService] Falling back to local insight generation');
       return this.getFallbackInsight(userPreferences, marketData);
     }
   }
