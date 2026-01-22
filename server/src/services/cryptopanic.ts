@@ -38,14 +38,25 @@ export class CryptoPanicService {
 
       const response = await axios.get(CRYPTOPANIC_API_URL, { params });
       
+      // Log first item to debug structure (remove after fixing)
+      if (response.data.results && response.data.results.length > 0) {
+        console.log('[CryptoPanic] Sample API response:', JSON.stringify(response.data.results[0], null, 2));
+      }
+      
       // Transform the response to a simpler format
-      return response.data.results.map((item: any) => ({
-        id: item.id,
-        title: item.title,
-        url: item.url,
-        domain: item.domain,
-        created_at: item.created_at,
-      }));
+      return response.data.results.map((item: any) => {
+        // CryptoPanic API might use different field names - try multiple possibilities
+        const url = item.url || item.source?.url || item.link || item.source?.link || null;
+        const domain = item.domain || item.source?.domain || item.source?.name || 'Unknown';
+        
+        return {
+          id: item.id,
+          title: item.title,
+          url: url || `https://cryptopanic.com/news/${item.id}/`, // Fallback to CryptoPanic news page
+          domain: domain,
+          created_at: item.created_at,
+        };
+      });
     } catch (error) {
       // Log full error response for debugging
       if (axios.isAxiosError(error)) {

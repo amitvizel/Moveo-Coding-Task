@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
 import CoinPrices from '../components/CoinPrices';
+import MarketNews from '../components/MarketNews';
 
 interface DashboardData {
   prices: Record<string, { usd: number; usd_24h_change: number }>;
@@ -159,11 +160,13 @@ const Dashboard: React.FC = () => {
             <CoinPrices prices={data?.prices || {}} />
           </div>
 
+          {/* Market News Component */}
           <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Market News</h3>
-            <pre className="text-sm text-gray-600 overflow-auto max-h-64">
-              {JSON.stringify(data?.news?.slice(0, 3), null, 2)}
-            </pre>
+            <h3 className="text-lg font-semibold mb-4 flex items-center">
+              <span className="mr-2">📰</span>
+              Market News
+            </h3>
+            <MarketNews news={data?.news || []} />
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow">
