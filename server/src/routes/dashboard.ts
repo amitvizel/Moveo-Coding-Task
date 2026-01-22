@@ -1,6 +1,7 @@
 import express from 'express';
 import { authenticateToken, type AuthRequest } from '../middleware/auth.js';
 import { CoinGeckoService } from '../services/coingecko.js';
+import { CryptoPanicService } from '../services/cryptopanic.js';
 import prisma from '../prisma.js';
 
 const router = express.Router();
@@ -21,16 +22,16 @@ router.get('/data', authenticateToken, async (req: AuthRequest, res) => {
 
     const favoriteCoins = (user?.preferences as any)?.favoriteCoins || [];
     
-    // Fetch prices
-    let prices = {};
-    if (favoriteCoins.length > 0) {
-        prices = await CoinGeckoService.getPrices(favoriteCoins);
-    }
+    // Fetch prices and news in parallel
+    const [prices, news] = await Promise.all([
+      favoriteCoins.length > 0 ? CoinGeckoService.getPrices(favoriteCoins) : Promise.resolve({}),
+      CryptoPanicService.getNews(favoriteCoins)
+    ]);
 
     res.json({
       prices,
+      news,
       // Placeholders for other services we'll add later
-      news: [],
       meme: null,
       aiInsight: null
     });
