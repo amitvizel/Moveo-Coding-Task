@@ -81,17 +81,17 @@ describe('MemeService', () => {
       expect(result?.author).toBe('fallback');
     });
 
-    it('should cache the meme for the day', async () => {
+    it('should fetch a new meme on each call (no caching)', async () => {
        const mockResponse = {
         data: {
           data: {
             children: [
               {
                 data: {
-                  title: 'Cached Meme',
-                  url: 'https://i.redd.it/cached.jpg',
+                  title: 'Fresh Meme',
+                  url: 'https://i.redd.it/fresh.jpg',
                   author: 'user3',
-                  permalink: '/r/crypto/cached',
+                  permalink: '/r/crypto/fresh',
                 },
               },
             ],
@@ -101,13 +101,14 @@ describe('MemeService', () => {
       axiosGetSpy.mockResolvedValue(mockResponse);
 
       // First call
-      await MemeService.getMeme();
+      const result1 = await MemeService.getMeme();
       expect(axiosGetSpy).toHaveBeenCalledTimes(1);
+      expect(result1?.title).toBe('Fresh Meme');
 
-      // Second call - should not hit API
+      // Second call - should fetch again (no caching)
       const result2 = await MemeService.getMeme();
-      expect(result2?.title).toBe('Cached Meme');
-      expect(axiosGetSpy).toHaveBeenCalledTimes(1);
+      expect(axiosGetSpy).toHaveBeenCalledTimes(2);
+      expect(result2?.title).toBe('Fresh Meme');
     });
   });
 });

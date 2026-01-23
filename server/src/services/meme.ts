@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { REDDIT_POST_LIMIT } from '../utils/constants.js';
 
 export interface Meme {
   title: string;
@@ -19,16 +20,25 @@ export class MemeService {
     try {
       // Fetch from r/cryptocurrencymemes (popular crypto meme subreddit)
       const response = await axios.get('https://www.reddit.com/r/cryptocurrencymemes/hot.json', {
-        params: { limit: 50 },
+        params: { limit: REDDIT_POST_LIMIT },
         headers: {
           'User-Agent': 'CryptoAdvisorApp/1.0',
         },
       });
 
-      const posts = response.data.data.children;
+      interface RedditPost {
+        data: {
+          url: string;
+          title: string;
+          author: string;
+          permalink: string;
+        };
+      }
+
+      const posts: RedditPost[] = response.data.data.children;
       
       // Filter for posts with images (not videos or text posts)
-      const imagePosts = posts.filter((post: any) => {
+      const imagePosts = posts.filter((post) => {
         const url = post.data.url;
         return (
           url &&
@@ -46,7 +56,11 @@ export class MemeService {
 
       // Pick a random meme from the filtered list
       const randomIndex = Math.floor(Math.random() * imagePosts.length);
-      const randomPost = imagePosts[randomIndex].data;
+      const randomPost = imagePosts[randomIndex]?.data;
+      
+      if (!randomPost) {
+        return this.getFallbackMeme();
+      }
 
       const meme: Meme = {
         title: randomPost.title,

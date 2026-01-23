@@ -103,7 +103,7 @@ describe('Dashboard Routes', () => {
         .set('Authorization', 'Bearer valid-token');
 
       expect(res.status).toBe(500);
-      expect(res.body.error).toBe('Failed to fetch dashboard data');
+      expect(res.body.error).toBe('Failed to fetch dashboard data. Please try again later.');
     });
 
      it('should return cached data if available', async () => {

@@ -1,7 +1,5 @@
 import prisma from '../prisma.js';
-
-// Type for cache types
-export type CacheType = 'prices' | 'news' | 'meme' | 'aiInsight';
+import type { Prisma } from '@prisma/client';
 
 // Cache type constants
 export const CacheType = {
@@ -11,17 +9,14 @@ export const CacheType = {
   aiInsight: 'aiInsight' as const,
 } as const;
 
-// Type assertion to work around TypeScript language server not picking up generated types
-const typedPrisma = prisma as typeof prisma & {
-  dashboardCache: {
-    findUnique: (args: any) => Promise<any>;
-    upsert: (args: any) => Promise<any>;
-  };
-};
+// Type for cache types
+export type CacheType = typeof CacheType[keyof typeof CacheType];
 
-export const CACHE_TTL_MS = 60 * 1000; // 1 minute in milliseconds
-export const MEME_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-export const AI_INSIGHT_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+// Type for cached data (can be any JSON-serializable value)
+type CachedData = Prisma.JsonValue;
+
+// Re-export cache TTL constants from utils for backward compatibility
+export { CACHE_TTL_MS, MEME_CACHE_TTL_MS, AI_INSIGHT_CACHE_TTL_MS } from '../utils/constants.js';
 
 /**
  * Checks if two dates are on the same calendar day (ignoring time).
@@ -50,9 +45,9 @@ export class CacheService {
     userId: string,
     cacheType: CacheType,
     ttlMs: number
-  ): Promise<any | null> {
+  ): Promise<CachedData | null> {
     try {
-      const cache = await typedPrisma.dashboardCache.findUnique({
+      const cache = await prisma.dashboardCache.findUnique({
         where: {
           userId_cacheType: {
             userId,
@@ -98,10 +93,10 @@ export class CacheService {
   static async setCachedDataByType(
     userId: string,
     cacheType: CacheType,
-    data: any
+    data: CachedData
   ): Promise<void> {
     try {
-      await typedPrisma.dashboardCache.upsert({
+      await prisma.dashboardCache.upsert({
         where: {
           userId_cacheType: {
             userId,
@@ -109,13 +104,13 @@ export class CacheService {
           },
         },
         update: {
-          data,
+          data: data as Prisma.InputJsonValue,
           fetchedAt: new Date(),
         },
         create: {
           userId,
           cacheType,
-          data,
+          data: data as Prisma.InputJsonValue,
           fetchedAt: new Date(),
         },
       });

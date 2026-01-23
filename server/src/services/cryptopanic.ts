@@ -25,7 +25,7 @@ export class CryptoPanicService {
     }
 
     try {
-      const params: any = {
+      const params: Record<string, string> = {
         auth_token: apiKey,
         public: 'true',
         kind: 'news',
@@ -38,13 +38,23 @@ export class CryptoPanicService {
 
       const response = await axios.get(CRYPTOPANIC_API_URL, { params });
       
-      // Log first item to debug structure (remove after fixing)
-      if (response.data.results && response.data.results.length > 0) {
-        console.log('[CryptoPanic] Sample API response:', JSON.stringify(response.data.results[0], null, 2));
-      }
-      
       // Transform the response to a simpler format
-      return response.data.results.map((item: any) => {
+      interface CryptoPanicItem {
+        id: number;
+        title: string;
+        url?: string;
+        source?: {
+          url?: string;
+          link?: string;
+          domain?: string;
+          name?: string;
+        };
+        link?: string;
+        domain?: string;
+        created_at: string;
+      }
+
+      return response.data.results.map((item: CryptoPanicItem) => {
         // CryptoPanic API might use different field names - try multiple possibilities
         const url = item.url || item.source?.url || item.link || item.source?.link || null;
         const domain = item.domain || item.source?.domain || item.source?.name || 'Unknown';

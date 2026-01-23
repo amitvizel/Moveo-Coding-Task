@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { AI_MAX_TOKENS, AI_TEMPERATURE, AI_TOP_P, AI_REQUEST_TIMEOUT_MS, AI_RESPONSE_MAX_LENGTH } from '../utils/constants.js';
 
 // Using Hugging Face Router API (OpenAI-compatible format)
 const HUGGINGFACE_API_URL = 'https://router.huggingface.co/v1/chat/completions';
@@ -51,16 +52,16 @@ export class AIService {
               content: prompt,
             },
           ],
-          max_tokens: 150,
-          temperature: 0.7,
-          top_p: 0.95,
+          max_tokens: AI_MAX_TOKENS,
+          temperature: AI_TEMPERATURE,
+          top_p: AI_TOP_P,
         },
         {
           headers: {
             Authorization: `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
           },
-          timeout: 30000, // 30 second timeout
+          timeout: AI_REQUEST_TIMEOUT_MS,
         }
       );
       const duration = Date.now() - startTime;
@@ -133,7 +134,7 @@ Provide a concise insight about market trends or opportunities. Be professional 
       .trim()
       .replace(/\n+/g, ' ')
       .replace(/\s+/g, ' ')
-      .substring(0, 500); // Limit to 500 characters
+      .substring(0, AI_RESPONSE_MAX_LENGTH);
   }
 
   /**
