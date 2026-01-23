@@ -5,6 +5,7 @@ import CoinPrices from '../components/CoinPrices';
 import MarketNews from '../components/MarketNews';
 import AIInsight from '../components/AIInsight';
 import MemeOfTheDay from '../components/MemeOfTheDay';
+import EditPreferencesModal from '../components/EditPreferencesModal';
 
 interface DashboardData {
   prices: Record<string, { usd: number; usd_24h_change: number }>;
@@ -34,6 +35,7 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [lastFetch, setLastFetch] = useState<number>(0);
+  const [isEditPreferencesOpen, setIsEditPreferencesOpen] = useState(false);
 
   const getTodayDate = (): string => {
     return new Date().toISOString().split('T')[0]!;
@@ -66,6 +68,12 @@ const Dashboard: React.FC = () => {
       localStorage.setItem(MEME_STORAGE_KEY, JSON.stringify(meme));
       localStorage.setItem(MEME_DATE_KEY, getTodayDate());
     }
+  };
+
+  const handlePreferencesSuccess = () => {
+    // Force a re-fetch by clearing data and resetting lastFetch
+    setData(null);
+    setLastFetch(0);
   };
 
   useEffect(() => {
@@ -157,12 +165,20 @@ const Dashboard: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">
             Crypto Advisor Dashboard
           </h1>
-          <button
-            onClick={logout}
-            className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-          >
-            Logout
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setIsEditPreferencesOpen(true)}
+              className="px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+            >
+              Edit Preferences
+            </button>
+            <button
+              onClick={logout}
+              className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+            >
+              Logout
+            </button>
+          </div>
         </div>
       </header>
 
@@ -213,6 +229,13 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* Edit Preferences Modal */}
+      <EditPreferencesModal 
+        isOpen={isEditPreferencesOpen}
+        onClose={() => setIsEditPreferencesOpen(false)}
+        onSuccess={handlePreferencesSuccess}
+      />
     </div>
   );
 };
