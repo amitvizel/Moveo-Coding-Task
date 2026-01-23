@@ -31,12 +31,22 @@ export class CoinGeckoService {
         return {};
       }
 
+      const apiKey = process.env.COINGECKO_API_KEY;
+      const headers: Record<string, string> = {};
+
+      if (apiKey) {
+        headers['x-cg-demo-api-key'] = apiKey;
+      } else {
+        console.warn('COINGECKO_API_KEY is not set. Using public API with limited rate limits.');
+      }
+
       const response = await axios.get(`${COINGECKO_API_URL}/simple/price`, {
         params: {
           ids: ids.join(','),
           vs_currencies: 'usd',
           include_24hr_change: 'true',
         },
+        headers,
       });
 
       return response.data;

@@ -39,6 +39,7 @@ Edit `.env` and set:
 - `DATABASE_URL` - PostgreSQL connection string (defaults to the Docker setup)
 - `CORS_ORIGIN` - Frontend URL (defaults to http://localhost:5173)
 - `PORT` - Server port (defaults to 3000)
+- `COINGECKO_API_KEY` - Optional, CoinGecko Demo API key (recommended for better rate limits)
 - `CRYPTOPANIC_API_KEY` - Optional, for crypto news
 - `HUGGINGFACE_API_KEY` - Optional, for AI insights
 
