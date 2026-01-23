@@ -1,17 +1,21 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import client from '../api/client';
 
-export enum FeedbackContentType {
-  NEWS = 'NEWS',
-  AI_INSIGHT = 'AI_INSIGHT',
-  MEME = 'MEME',
-  COIN_PRICE = 'COIN_PRICE',
-}
+export const FeedbackContentType = {
+  NEWS: 'NEWS',
+  AI_INSIGHT: 'AI_INSIGHT',
+  MEME: 'MEME',
+  COIN_PRICE: 'COIN_PRICE',
+} as const;
 
-export enum VoteType {
-  UP = 'UP',
-  DOWN = 'DOWN',
-}
+export type FeedbackContentType = typeof FeedbackContentType[keyof typeof FeedbackContentType];
+
+export const VoteType = {
+  UP: 'UP',
+  DOWN: 'DOWN',
+} as const;
+
+export type VoteType = typeof VoteType[keyof typeof VoteType];
 
 interface FeedbackButtonsProps {
   contentType: FeedbackContentType;
