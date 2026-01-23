@@ -62,10 +62,6 @@ const MemeOfTheDay: React.FC<MemeOfTheDayProps> = ({ meme }) => {
 
         {/* Content */}
         <div className="flex-1 flex flex-col">
-          <h4 className="font-medium text-gray-900 mb-3 text-center px-2 line-clamp-2">
-            {meme.title}
-          </h4>
-          
           <div className="relative flex-1 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center min-h-[200px] group cursor-pointer">
             <a 
               href={meme.permalink} 
