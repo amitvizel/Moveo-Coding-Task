@@ -8,11 +8,22 @@ import feedbackRoutes from './routes/feedback.js';
 
 dotenv.config();
 
+// Validate required environment variables
+const requiredEnvVars = ['JWT_SECRET'];
+for (const envVar of requiredEnvVars) {
+  if (!process.env[envVar]) {
+    console.error(`Error: ${envVar} environment variable is required`);
+    process.exit(1);
+  }
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// CORS configuration - use environment variable or default to localhost for development
+const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: corsOrigin,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']

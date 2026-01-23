@@ -4,11 +4,33 @@ import jwt from 'jsonwebtoken';
 import prisma from '../prisma.js';
 
 const router = Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
+
+// Basic email validation
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
 
 // Register
 router.post('/register', async (req, res) => {
   const { email, password, name } = req.body;
+
+  // Input validation
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
+  if (!isValidEmail(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+  }
 
   try {
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -35,6 +57,15 @@ router.post('/register', async (req, res) => {
 // Login
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
+
+  // Input validation
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
+  if (!isValidEmail(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
+  }
 
   try {
     const user = await prisma.user.findUnique({ where: { email } });
