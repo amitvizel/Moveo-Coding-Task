@@ -60,6 +60,7 @@ describe('Dashboard Page', () => {
     });
 
     expect(screen.getByText('Welcome back, Test User!')).toBeInTheDocument();
+    expect(screen.getByText(/Last updated:/)).toBeInTheDocument();
     expect(screen.getByText('Bitcoin')).toBeInTheDocument();
     expect(screen.getByText('Crypto News')).toBeInTheDocument();
     expect(screen.getByText('Buy Bitcoin')).toBeInTheDocument();

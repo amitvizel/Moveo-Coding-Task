@@ -39,6 +39,11 @@ const Dashboard: React.FC = () => {
     return new Date().toISOString().split('T')[0]!;
   };
 
+  const formatLastUpdated = (timestamp: number) => {
+    if (!timestamp) return '';
+    return new Date(timestamp).toLocaleString();
+  };
+
   const getCachedMeme = (): DashboardData['meme'] | null => {
     const cachedDate = localStorage.getItem(MEME_DATE_KEY);
     const today = getTodayDate();
@@ -171,6 +176,11 @@ const Dashboard: React.FC = () => {
           <p className="text-gray-500 mt-1">
             Here's your personalized crypto market overview
           </p>
+          {lastFetch > 0 && (
+            <p className="text-xs text-gray-400 mt-2">
+              Last updated: {formatLastUpdated(lastFetch)}
+            </p>
+          )}
         </div>
 
         {/* Dashboard Grid - Will hold 4 components */}
