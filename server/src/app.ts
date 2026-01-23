@@ -10,10 +10,13 @@ dotenv.config();
 
 const app = express();
 
-// CORS configuration - use environment variable or default to localhost for development
-const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
+// CORS configuration - supports single origin or comma-separated list of origins
+const corsOriginEnv = process.env.CORS_ORIGIN || 'http://localhost:5173';
+const corsOrigins = corsOriginEnv.includes(',')
+  ? corsOriginEnv.split(',').map(origin => origin.trim())
+  : corsOriginEnv;
 app.use(cors({
-  origin: corsOrigin,
+  origin: corsOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
