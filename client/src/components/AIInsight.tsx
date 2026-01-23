@@ -59,10 +59,6 @@ const AIInsight: React.FC<AIInsightProps> = ({ insight }) => {
           </p>
         </div>
 
-        {/* Decorative quote marks */}
-        <div className="absolute top-4 right-4 text-blue-200 text-6xl font-serif leading-none">
-          "
-        </div>
       </div>
     </div>
   );
