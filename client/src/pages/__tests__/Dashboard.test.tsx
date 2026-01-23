@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import Dashboard from '../Dashboard';
 import client from '../../api/client';
 import { vi } from 'vitest';
+import { ThemeProvider } from '../../context/ThemeContext';
 
 // Mock API Client
 vi.mock('../../api/client', () => ({
@@ -30,6 +31,10 @@ vi.mock('../../components/FeedbackButtons', () => ({
   FeedbackContentType: { AI_INSIGHT: 'ai_insight', NEWS: 'news' },
 }));
 
+const renderWithTheme = (component: React.ReactElement) => {
+  return render(<ThemeProvider>{component}</ThemeProvider>);
+};
+
 describe('Dashboard Page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -38,7 +43,7 @@ describe('Dashboard Page', () => {
 
   it('renders loading state initially', () => {
     (client.get as any).mockReturnValue(new Promise(() => {})); // Never resolves
-    render(<Dashboard />);
+    renderWithTheme(<Dashboard />);
     expect(screen.getByText(/Loading your personalized dashboard/i)).toBeInTheDocument();
   });
 
@@ -53,7 +58,7 @@ describe('Dashboard Page', () => {
     };
     (client.get as any).mockResolvedValue(mockData);
 
-    render(<Dashboard />);
+    renderWithTheme(<Dashboard />);
 
     await waitFor(() => {
       expect(screen.queryByText(/Loading/i)).not.toBeInTheDocument();
@@ -77,7 +82,7 @@ describe('Dashboard Page', () => {
     };
     (client.get as any).mockRejectedValue(errorResponse);
 
-    render(<Dashboard />);
+    renderWithTheme(<Dashboard />);
 
     await waitFor(() => {
       expect(screen.queryByText(/Loading/i)).not.toBeInTheDocument();

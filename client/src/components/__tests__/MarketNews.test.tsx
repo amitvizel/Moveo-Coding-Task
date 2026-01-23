@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import MarketNews from '../MarketNews';
+import { ThemeProvider } from '../../context/ThemeContext';
 
 // Mock FeedbackButtons
 vi.mock('../FeedbackButtons', () => ({
@@ -8,9 +9,13 @@ vi.mock('../FeedbackButtons', () => ({
   FeedbackContentType: { NEWS: 'news' },
 }));
 
+const renderWithTheme = (component: React.ReactElement) => {
+  return render(<ThemeProvider>{component}</ThemeProvider>);
+};
+
 describe('MarketNews', () => {
   it('renders empty state when news is empty', () => {
-    render(<MarketNews news={[]} />);
+    renderWithTheme(<MarketNews news={[]} />);
     expect(screen.getByText(/No news available/i)).toBeInTheDocument();
   });
 
@@ -32,7 +37,7 @@ describe('MarketNews', () => {
       },
     ];
 
-    render(<MarketNews news={news} />);
+    renderWithTheme(<MarketNews news={news} />);
 
     // First item
     expect(screen.getByText('Crypto Market Rally')).toBeInTheDocument();

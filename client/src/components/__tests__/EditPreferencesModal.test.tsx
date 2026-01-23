@@ -28,8 +28,8 @@ describe('EditPreferencesModal', () => {
     email: 'test@example.com',
     preferences: {
       favoriteCoins: ['BTC', 'ETH'],
-      riskTolerance: 'moderate',
-      contentFocus: ['news', 'technical'],
+      investorType: 'HODLer' as const,
+      contentPreferences: ['Market News', 'Charts'] as const,
     },
   };
 
@@ -68,13 +68,14 @@ describe('EditPreferencesModal', () => {
     expect(screen.getByRole('button', { name: 'BTC' })).toHaveClass('bg-blue-100');
     expect(screen.getByRole('button', { name: 'SOL' })).not.toHaveClass('bg-blue-100');
 
-    // Check Risk Tolerance
-    expect(screen.getByRole('button', { name: 'moderate' })).toHaveClass('bg-blue-100');
-    expect(screen.getByRole('button', { name: 'aggressive' })).not.toHaveClass('bg-blue-100');
+    // Check Investor Type
+    expect(screen.getByRole('button', { name: 'HODLer' })).toHaveClass('bg-blue-100');
+    expect(screen.getByRole('button', { name: 'Day Trader' })).not.toHaveClass('bg-blue-100');
 
-    // Check Content Focus
+    // Check Content Preferences
     expect(screen.getByText('Market News').closest('button')).toHaveClass('bg-blue-100');
-    expect(screen.getByText('Memes & Fun').closest('button')).not.toHaveClass('bg-blue-100');
+    expect(screen.getByText('Charts').closest('button')).toHaveClass('bg-blue-100');
+    expect(screen.getByText('Fun').closest('button')).not.toHaveClass('bg-blue-100');
   });
 
   it('should handle interactions correctly', async () => {
@@ -92,16 +93,16 @@ describe('EditPreferencesModal', () => {
     await user.click(solButton);
     expect(solButton).toHaveClass('bg-blue-100');
 
-    // Change Risk Tolerance
-    const aggressiveButton = screen.getByRole('button', { name: 'aggressive' });
-    await user.click(aggressiveButton);
-    expect(aggressiveButton).toHaveClass('bg-blue-100');
-    expect(screen.getByRole('button', { name: 'moderate' })).not.toHaveClass('bg-blue-100');
+    // Change Investor Type
+    const dayTraderButton = screen.getByRole('button', { name: 'Day Trader' });
+    await user.click(dayTraderButton);
+    expect(dayTraderButton).toHaveClass('bg-blue-100');
+    expect(screen.getByRole('button', { name: 'HODLer' })).not.toHaveClass('bg-blue-100');
 
-    // Toggle Content Focus
-    const memesButton = screen.getByText('Memes & Fun').closest('button')!;
-    await user.click(memesButton);
-    expect(memesButton).toHaveClass('bg-blue-100');
+    // Toggle Content Preferences
+    const funButton = screen.getByText('Fun').closest('button')!;
+    await user.click(funButton);
+    expect(funButton).toHaveClass('bg-blue-100');
   });
 
   it('should disable save button if validation fails', async () => {
@@ -141,7 +142,7 @@ describe('EditPreferencesModal', () => {
 
     // Change some preferences
     await user.click(screen.getByRole('button', { name: 'SOL' })); // Add SOL
-    await user.click(screen.getByRole('button', { name: 'aggressive' })); // Change risk
+    await user.click(screen.getByRole('button', { name: 'Day Trader' })); // Change investor type
 
     // Click Save
     await user.click(screen.getByRole('button', { name: 'Save Preferences' }));
@@ -152,8 +153,8 @@ describe('EditPreferencesModal', () => {
     expect(client.put).toHaveBeenCalledWith('/user/preferences', {
       preferences: {
         favoriteCoins: ['BTC', 'ETH', 'SOL'],
-        riskTolerance: 'aggressive',
-        contentFocus: ['news', 'technical'],
+        investorType: 'Day Trader',
+        contentPreferences: ['Market News', 'Charts'],
       },
     });
 
@@ -163,8 +164,8 @@ describe('EditPreferencesModal', () => {
         ...mockUser,
         preferences: {
           favoriteCoins: ['BTC', 'ETH', 'SOL'],
-          riskTolerance: 'aggressive',
-          contentFocus: ['news', 'technical'],
+          investorType: 'Day Trader',
+          contentPreferences: ['Market News', 'Charts'],
         },
       });
     });
@@ -176,7 +177,6 @@ describe('EditPreferencesModal', () => {
 
   it('should handle API errors gracefully', async () => {
     const user = userEvent.setup();
-    const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => {});
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     
     (client.put as any).mockRejectedValue(new Error('API Error'));
@@ -192,14 +192,13 @@ describe('EditPreferencesModal', () => {
     await user.click(screen.getByRole('button', { name: 'Save Preferences' }));
 
     await waitFor(() => {
-        expect(alertMock).toHaveBeenCalledWith('Failed to save preferences. Please try again.');
+      expect(screen.getByText('API Error')).toBeInTheDocument();
     });
     
     expect(mockUpdateUser).not.toHaveBeenCalled();
     expect(mockOnSuccess).not.toHaveBeenCalled();
     expect(mockOnClose).not.toHaveBeenCalled();
 
-    alertMock.mockRestore();
     consoleSpy.mockRestore();
   });
 
