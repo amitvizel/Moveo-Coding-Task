@@ -128,5 +128,62 @@ describe('Dashboard Routes', () => {
       expect(res.body.prices).toEqual({ bitcoin: { usd: 100 } });
       expect(pricesSpy).not.toHaveBeenCalled();
     });
+
+    it('should filter out empty price objects from API response', async () => {
+      findUniqueSpy.mockResolvedValue({
+        id: 'user-1',
+        preferences: { favoriteCoins: ['BTC', 'MATIC'] },
+      });
+      cacheGetSpy.mockResolvedValue(null);
+      pricesSpy.mockResolvedValue({
+        bitcoin: { usd: 50000, usd_24h_change: 2.5 },
+        'matic-network': {},
+      });
+      newsSpy.mockResolvedValue([]);
+      memeSpy.mockResolvedValue({ title: 'Meme' });
+      aiSpy.mockResolvedValue('Insight');
+
+      const res = await request(app)
+        .get('/dashboard/data')
+        .set('Authorization', 'Bearer valid-token');
+
+      expect(res.status).toBe(200);
+      expect(res.body.prices).toEqual({
+        bitcoin: { usd: 50000, usd_24h_change: 2.5 },
+      });
+      expect(res.body.prices['matic-network']).toBeUndefined();
+    });
+
+    it('should filter out invalid price objects from cached data', async () => {
+      findUniqueSpy.mockResolvedValue({
+        id: 'user-1',
+        preferences: {},
+      });
+
+      cacheGetSpy.mockImplementation(async (userId: string, type: string) => {
+          if (type === 'prices') {
+            return {
+              bitcoin: { usd: 50000, usd_24h_change: 2.5 },
+              'matic-network': {},
+              ethereum: { usd: 3000 },
+            };
+          }
+          if (type === 'news') return [];
+          if (type === 'meme') return { title: 'Meme' };
+          if (type === 'aiInsight') return 'Insight';
+          return null;
+      });
+
+      const res = await request(app)
+        .get('/dashboard/data')
+        .set('Authorization', 'Bearer valid-token');
+
+      expect(res.status).toBe(200);
+      expect(res.body.prices).toEqual({
+        bitcoin: { usd: 50000, usd_24h_change: 2.5 },
+      });
+      expect(res.body.prices['matic-network']).toBeUndefined();
+      expect(res.body.prices.ethereum).toBeUndefined();
+    });
   });
 });

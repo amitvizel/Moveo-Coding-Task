@@ -104,5 +104,22 @@ describe('CoinGeckoService', () => {
       expect(result).toEqual(mockResponse.data);
       expect(axiosGetSpy).toHaveBeenCalledTimes(1);
     });
+
+    it('should return empty objects for coins without data', async () => {
+      process.env.COINGECKO_API_KEY = 'test-api-key';
+      const mockResponse = {
+        data: {
+          bitcoin: { usd: 50000, usd_24h_change: 2.5 },
+          'matic-network': {},
+        },
+      };
+      axiosGetSpy.mockResolvedValue(mockResponse);
+
+      const symbols = ['BTC', 'MATIC'];
+      const result = await CoinGeckoService.getPrices(symbols);
+
+      expect(result).toEqual(mockResponse.data);
+      expect(result['matic-network']).toEqual({});
+    });
   });
 });

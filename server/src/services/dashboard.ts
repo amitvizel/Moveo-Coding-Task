@@ -25,6 +25,39 @@ export interface DashboardData {
 }
 
 /**
+ * Type guard to check if a value is a valid price data object.
+ */
+function isValidPriceData(
+  value: unknown
+): value is { usd: number; usd_24h_change: number } {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    'usd' in value &&
+    'usd_24h_change' in value &&
+    typeof (value as { usd: unknown }).usd === 'number' &&
+    typeof (value as { usd_24h_change: unknown }).usd_24h_change === 'number'
+  );
+}
+
+/**
+ * Filters out invalid price entries that don't have valid usd and usd_24h_change properties.
+ * @param prices Raw prices data from API or cache
+ * @returns Filtered prices object with only valid entries
+ */
+function filterValidPrices(
+  prices: Record<string, unknown>
+): Record<string, { usd: number; usd_24h_change: number }> {
+  const validPrices: Record<string, { usd: number; usd_24h_change: number }> = {};
+  for (const [coinId, priceData] of Object.entries(prices)) {
+    if (isValidPriceData(priceData)) {
+      validPrices[coinId] = priceData;
+    }
+  }
+  return validPrices;
+}
+
+/**
  * Fetches user preferences from the database.
  * @param userId User ID to fetch preferences for
  * @returns User preferences object with defaults
@@ -68,9 +101,12 @@ async function fetchPrices(
     prices = favoriteCoins.length > 0
       ? await CoinGeckoService.getPrices(favoriteCoins)
       : {};
+    
+    prices = filterValidPrices(prices);
     await CacheService.setCachedDataByType(userId, CacheType.prices, prices);
   } else {
     console.log('[Dashboard] Using cached prices for user:', userId);
+    prices = filterValidPrices(prices);
   }
 
   return prices;
