@@ -1,5 +1,6 @@
 import React from 'react';
 import FeedbackButtons, { FeedbackContentType } from './FeedbackButtons';
+import { useTheme } from '../context/ThemeContext';
 
 interface MemeData {
   title: string;
@@ -13,6 +14,7 @@ interface MemeOfTheDayProps {
 }
 
 const MemeOfTheDay: React.FC<MemeOfTheDayProps> = ({ meme }) => {
+  const { theme } = useTheme();
   if (!meme) {
     return (
       <div className="p-6 h-full flex items-center justify-center">
@@ -25,31 +27,19 @@ const MemeOfTheDay: React.FC<MemeOfTheDayProps> = ({ meme }) => {
 
   return (
     <div className="relative h-full flex flex-col">
-      {/* Decorative gradient background for header */}
-      <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-br from-yellow-100 via-orange-50 to-red-50 opacity-70 pointer-events-none"></div>
+      {/* Decorative gradient background for header - only show in light themes */}
+      {theme !== 'neon' && (
+        <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-br from-yellow-100 via-orange-50 to-red-50 opacity-70 pointer-events-none"></div>
+      )}
       
       <div className="relative p-6 flex flex-col h-full">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
-            <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mr-3 shadow-sm">
-              <svg 
-                className="w-5 h-5 text-white" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" 
-                />
-              </svg>
-            </div>
+            <span className="text-xl mr-3">😂</span>
             <div>
               <h3 className="text-sm font-semibold text-skin-text-secondary uppercase tracking-wide">
-                Meme of the Day
+                Fresh meme
               </h3>
               <p className="text-xs text-skin-text-muted">Daily dose of fun</p>
             </div>

@@ -15,15 +15,15 @@ const EditPreferencesModal: React.FC<EditPreferencesModalProps> = ({ isOpen, onC
 
   // Form State
   const [favoriteCoins, setFavoriteCoins] = useState<string[]>([]);
-  const [riskTolerance, setRiskTolerance] = useState<UserPreferences['riskTolerance']>('moderate');
-  const [contentFocus, setContentFocus] = useState<UserPreferences['contentFocus']>([]);
+  const [investorType, setInvestorType] = useState<UserPreferences['investorType']>('HODLer');
+  const [contentPreferences, setContentPreferences] = useState<UserPreferences['contentPreferences']>([]);
 
   // Initialize state from user preferences when modal opens
   useEffect(() => {
     if (isOpen && user?.preferences) {
       setFavoriteCoins(user.preferences.favoriteCoins || []);
-      setRiskTolerance(user.preferences.riskTolerance || 'moderate');
-      setContentFocus(user.preferences.contentFocus || []);
+      setInvestorType(user.preferences.investorType || 'HODLer');
+      setContentPreferences(user.preferences.contentPreferences || []);
     }
   }, [isOpen, user]);
 
@@ -31,10 +31,11 @@ const EditPreferencesModal: React.FC<EditPreferencesModalProps> = ({ isOpen, onC
 
   // Available Options
   const coinOptions = ['BTC', 'ETH', 'SOL', 'ADA', 'DOGE', 'XRP', 'DOT', 'MATIC'];
-  const contentOptions: { value: 'news' | 'technical' | 'memes'; label: string }[] = [
-    { value: 'news', label: 'Market News' },
-    { value: 'technical', label: 'Technical Analysis' },
-    { value: 'memes', label: 'Memes & Fun' },
+  const contentOptions: { value: 'Market News' | 'Charts' | 'Social' | 'Fun'; label: string }[] = [
+    { value: 'Market News', label: 'Market News' },
+    { value: 'Charts', label: 'Charts' },
+    { value: 'Social', label: 'Social' },
+    { value: 'Fun', label: 'Fun' },
   ];
 
   const toggleCoin = (coin: string) => {
@@ -43,8 +44,8 @@ const EditPreferencesModal: React.FC<EditPreferencesModalProps> = ({ isOpen, onC
     );
   };
 
-  const toggleContent = (content: 'news' | 'technical' | 'memes') => {
-    setContentFocus((prev) =>
+  const toggleContent = (content: 'Market News' | 'Charts' | 'Social' | 'Fun') => {
+    setContentPreferences((prev) =>
       prev.includes(content) ? prev.filter((c) => c !== content) : [...prev, content]
     );
   };
@@ -54,7 +55,7 @@ const EditPreferencesModal: React.FC<EditPreferencesModalProps> = ({ isOpen, onC
       alert('Please select at least one coin.');
       return;
     }
-    if (contentFocus.length === 0) {
+    if (contentPreferences.length === 0) {
       alert('Please select at least one content type.');
       return;
     }
@@ -63,8 +64,8 @@ const EditPreferencesModal: React.FC<EditPreferencesModalProps> = ({ isOpen, onC
     try {
       const preferences: UserPreferences = {
         favoriteCoins,
-        riskTolerance,
-        contentFocus,
+        investorType,
+        contentPreferences,
       };
 
       const response = await client.put('/user/preferences', { preferences });
@@ -121,44 +122,44 @@ const EditPreferencesModal: React.FC<EditPreferencesModalProps> = ({ isOpen, onC
             )}
           </div>
 
-          {/* Risk Tolerance Section */}
+          {/* Investor Type Section */}
           <div>
-            <h3 className="text-lg font-semibold mb-3">Risk Tolerance</h3>
+            <h3 className="text-lg font-semibold mb-3">Investor Type</h3>
             <div className="flex flex-col sm:flex-row gap-3">
-              {(['conservative', 'moderate', 'aggressive'] as const).map((risk) => (
+              {(['HODLer', 'Day Trader', 'NFT Collector'] as const).map((type) => (
                 <button
-                  key={risk}
-                  onClick={() => setRiskTolerance(risk)}
+                  key={type}
+                  onClick={() => setInvestorType(type)}
                   className={`flex-1 p-3 text-center rounded border transition-colors ${
-                    riskTolerance === risk
+                    investorType === type
                       ? 'bg-blue-100 border-blue-500 text-blue-700'
                       : 'bg-white border-gray-300 hover:bg-gray-50'
                   }`}
                 >
-                  <span className="capitalize font-medium">{risk}</span>
+                  <span className="font-medium">{type}</span>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Content Focus Section */}
+          {/* Content Preferences Section */}
           <div>
-            <h3 className="text-lg font-semibold mb-3">Content Focus</h3>
+            <h3 className="text-lg font-semibold mb-3">Content Preferences</h3>
             <div className="space-y-2">
               {contentOptions.map((option) => (
                 <button
                   key={option.value}
                   onClick={() => toggleContent(option.value)}
                   className={`w-full p-3 text-left rounded border transition-colors flex items-center ${
-                    contentFocus.includes(option.value)
+                    contentPreferences.includes(option.value)
                       ? 'bg-blue-100 border-blue-500 text-blue-700'
                       : 'bg-white border-gray-300 hover:bg-gray-50'
                   }`}
                 >
                   <span className={`w-5 h-5 mr-3 border rounded flex items-center justify-center ${
-                    contentFocus.includes(option.value) ? 'bg-blue-600 border-blue-600' : 'border-gray-400'
+                    contentPreferences.includes(option.value) ? 'bg-blue-600 border-blue-600' : 'border-gray-400'
                   }`}>
-                    {contentFocus.includes(option.value) && (
+                    {contentPreferences.includes(option.value) && (
                       <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                       </svg>
@@ -168,7 +169,7 @@ const EditPreferencesModal: React.FC<EditPreferencesModalProps> = ({ isOpen, onC
                 </button>
               ))}
             </div>
-            {contentFocus.length === 0 && (
+            {contentPreferences.length === 0 && (
               <p className="text-red-500 text-sm mt-1">Select at least one content type.</p>
             )}
           </div>
@@ -183,7 +184,7 @@ const EditPreferencesModal: React.FC<EditPreferencesModalProps> = ({ isOpen, onC
           </button>
           <button
             onClick={handleSubmit}
-            disabled={loading || favoriteCoins.length === 0 || contentFocus.length === 0}
+            disabled={loading || favoriteCoins.length === 0 || contentPreferences.length === 0}
             className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center"
           >
             {loading ? (

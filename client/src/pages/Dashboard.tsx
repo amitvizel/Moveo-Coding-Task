@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import client from '../api/client';
@@ -28,8 +28,6 @@ interface DashboardData {
 }
 
 const CACHE_DURATION = 60000; // 60 seconds
-const MEME_STORAGE_KEY = 'crypto_advisor_daily_meme';
-const MEME_DATE_KEY = 'crypto_advisor_meme_date';
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -40,38 +38,11 @@ const Dashboard: React.FC = () => {
   const [lastFetch, setLastFetch] = useState<number>(0);
   const [isEditPreferencesOpen, setIsEditPreferencesOpen] = useState(false);
   const [isThemeSwitcherOpen, setIsThemeSwitcherOpen] = useState(false);
-
-  const getTodayDate = (): string => {
-    return new Date().toISOString().split('T')[0]!;
-  };
+  const isFetchingRef = useRef(false);
 
   const formatLastUpdated = (timestamp: number) => {
     if (!timestamp) return '';
     return new Date(timestamp).toLocaleString();
-  };
-
-  const getCachedMeme = (): DashboardData['meme'] | null => {
-    const cachedDate = localStorage.getItem(MEME_DATE_KEY);
-    const today = getTodayDate();
-    
-    if (cachedDate === today) {
-      const cachedMeme = localStorage.getItem(MEME_STORAGE_KEY);
-      if (cachedMeme) {
-        try {
-          return JSON.parse(cachedMeme);
-        } catch (e) {
-          console.error('Failed to parse cached meme:', e);
-        }
-      }
-    }
-    return null;
-  };
-
-  const setCachedMeme = (meme: DashboardData['meme']) => {
-    if (meme) {
-      localStorage.setItem(MEME_STORAGE_KEY, JSON.stringify(meme));
-      localStorage.setItem(MEME_DATE_KEY, getTodayDate());
-    }
   };
 
   const handlePreferencesSuccess = () => {
@@ -82,6 +53,12 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const fetchDashboardData = async () => {
+      // Prevent concurrent fetches
+      if (isFetchingRef.current) {
+        console.log('[Dashboard] Fetch already in progress, skipping');
+        return;
+      }
+
       const now = Date.now();
       
       // Check if we have cached data and it's still fresh
@@ -92,47 +69,25 @@ const Dashboard: React.FC = () => {
       }
 
       try {
+        isFetchingRef.current = true;
         console.log('[Dashboard] Fetching fresh data from API');
         setLoading(true);
         setError('');
         const response = await client.get('/dashboard/data');
         
-        // Always check for cached meme first (persists across refreshes)
-        const cachedMeme = getCachedMeme();
-        const memeToUse = cachedMeme || response.data.meme;
-        
-        // If we got a new meme from API and don't have cached one, cache it
-        if (response.data.meme && !cachedMeme) {
-          console.log('[Dashboard] Caching new meme for today');
-          setCachedMeme(response.data.meme);
-        } else if (cachedMeme) {
-          console.log('[Dashboard] Using cached meme from localStorage');
-        }
-        
-        // Merge API data with cached meme
-        const dashboardData = {
-          ...response.data,
-          meme: memeToUse,
-        };
-        
-        setData(dashboardData);
+        setData(response.data);
         setLastFetch(now);
       } catch (err: any) {
         console.error('Failed to fetch dashboard data:', err);
         setError(err.response?.data?.error || 'Failed to load dashboard');
-        
-        // On error, try to load cached meme if available
-        const cachedMeme = getCachedMeme();
-        if (cachedMeme && data) {
-          setData({ ...data, meme: cachedMeme });
-        }
       } finally {
         setLoading(false);
+        isFetchingRef.current = false;
       }
     };
 
     fetchDashboardData();
-  }, [data, lastFetch]);
+  }, [lastFetch]);
 
   if (loading) {
     return (

@@ -21,10 +21,26 @@ const typedPrisma = prisma as typeof prisma & {
 
 export const CACHE_TTL_MS = 60 * 1000; // 1 minute in milliseconds
 export const MEME_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+export const AI_INSIGHT_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+/**
+ * Checks if two dates are on the same calendar day (ignoring time).
+ * @param date1 First date to compare
+ * @param date2 Second date to compare
+ * @returns true if both dates are on the same day, false otherwise
+ */
+function isSameDay(date1: Date, date2: Date): boolean {
+  return (
+    date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate()
+  );
+}
 
 export class CacheService {
   /**
    * Retrieves cached data for a specific type if it exists and is within the TTL.
+   * For AI insights, checks if the cache is from the same day instead of using TTL.
    * @param userId User ID to retrieve cache for
    * @param cacheType Type of cache to retrieve
    * @param ttlMs Time to live in milliseconds
@@ -51,8 +67,17 @@ export class CacheService {
 
       const now = new Date();
       const fetchedAt = cache.fetchedAt;
-      const ageMs = now.getTime() - fetchedAt.getTime();
 
+      // For AI insights, check if cache is from the same day
+      if (cacheType === CacheType.aiInsight) {
+        if (!isSameDay(now, fetchedAt)) {
+          return null;
+        }
+        return cache.data;
+      }
+
+      // For other cache types, use TTL-based expiration
+      const ageMs = now.getTime() - fetchedAt.getTime();
       if (ageMs >= ttlMs) {
         return null;
       }

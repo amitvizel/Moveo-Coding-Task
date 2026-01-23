@@ -3,8 +3,8 @@ import client from '../api/client';
 
 export interface UserPreferences {
   favoriteCoins: string[];
-  riskTolerance: 'conservative' | 'moderate' | 'aggressive';
-  contentFocus: ('news' | 'technical' | 'memes')[];
+  investorType: 'HODLer' | 'Day Trader' | 'NFT Collector';
+  contentPreferences: ('Market News' | 'Charts' | 'Social' | 'Fun')[];
 }
 
 // Define the User interface matching the backend model

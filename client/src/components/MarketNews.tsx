@@ -1,5 +1,6 @@
 import React from 'react';
 import FeedbackButtons, { FeedbackContentType } from './FeedbackButtons';
+import { useTheme } from '../context/ThemeContext';
 
 interface NewsItem {
   id: number;
@@ -14,6 +15,7 @@ interface MarketNewsProps {
 }
 
 const MarketNews: React.FC<MarketNewsProps> = ({ news }) => {
+  const { theme } = useTheme();
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -37,74 +39,42 @@ const MarketNews: React.FC<MarketNewsProps> = ({ news }) => {
     );
   }
 
+  // In Meme Mode, use a much larger max-height since cards are in a narrower 3-column grid
+  // This prevents bottom cutoff while still allowing scrolling for long lists
+  const maxHeightClass = theme === 'meme' ? 'max-h-[600px]' : 'max-h-96';
+  
   return (
-    <div className="space-y-3 max-h-96 overflow-y-auto">
+    <div className={`space-y-3 ${maxHeightClass} overflow-y-auto pb-4`}>
       {news.map((item) => {
-        const hasUrl = item.url && item.url.trim() !== '';
-        const content = (
-          <div className="flex items-start justify-between">
-            <div className="flex-1 mr-3">
-              <h4 className="font-medium text-skin-text-primary mb-1 line-clamp-2 hover:text-skin-primary transition-colors">
-                {item.title}
-              </h4>
-              <div className="flex items-center space-x-2 text-xs text-skin-text-muted">
-                <span className="flex items-center">
-                  <span className="mr-1">🌐</span>
-                  {item.domain}
-                </span>
-                <span>•</span>
-                <span className="flex items-center">
-                  <span className="mr-1">🕐</span>
-                  {formatTimeAgo(item.created_at)}
-                </span>
-              </div>
-            </div>
-            <div className="flex flex-col items-end space-y-2 flex-shrink-0">
-              {hasUrl && (
-                <div className="text-skin-text-muted hover:text-skin-primary transition-colors">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                    />
-                  </svg>
-                </div>
-              )}
-              <FeedbackButtons 
-                contentType={FeedbackContentType.NEWS} 
-                contentId={item.id.toString()} 
-              />
-            </div>
-          </div>
-        );
-
-        if (hasUrl) {
-          return (
-            <a
-              key={item.id}
-              href={item.url!}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block p-4 bg-skin-base rounded-lg hover:shadow-md transition-all border border-skin-border hover:border-skin-primary"
-            >
-              {content}
-            </a>
-          );
-        }
-
         return (
           <div
             key={item.id}
             className="block p-4 bg-skin-base rounded-lg border border-skin-border"
           >
-            {content}
+            <div className="flex items-start justify-between">
+              <div className="flex-1 mr-3">
+                <h4 className="font-medium text-skin-text-primary mb-1 line-clamp-2">
+                  {item.title}
+                </h4>
+                <div className="flex items-center space-x-2 text-xs text-skin-text-muted">
+                  <span className="flex items-center">
+                    <span className="mr-1">🌐</span>
+                    {item.domain}
+                  </span>
+                  <span>•</span>
+                  <span className="flex items-center">
+                    <span className="mr-1">🕐</span>
+                    {formatTimeAgo(item.created_at)}
+                  </span>
+                </div>
+              </div>
+              <div className="flex flex-col items-end space-y-2 flex-shrink-0">
+                <FeedbackButtons 
+                  contentType={FeedbackContentType.NEWS} 
+                  contentId={item.id.toString()} 
+                />
+              </div>
+            </div>
           </div>
         );
       })}

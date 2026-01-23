@@ -12,15 +12,16 @@ const Onboarding: React.FC = () => {
 
   // Form State
   const [favoriteCoins, setFavoriteCoins] = useState<string[]>([]);
-  const [riskTolerance, setRiskTolerance] = useState<UserPreferences['riskTolerance']>('moderate');
-  const [contentFocus, setContentFocus] = useState<UserPreferences['contentFocus']>([]);
+  const [investorType, setInvestorType] = useState<UserPreferences['investorType']>('HODLer');
+  const [contentPreferences, setContentPreferences] = useState<UserPreferences['contentPreferences']>([]);
 
   // Available Options
   const coinOptions = ['BTC', 'ETH', 'SOL', 'ADA', 'DOGE', 'XRP', 'DOT', 'MATIC'];
-  const contentOptions: { value: 'news' | 'technical' | 'memes'; label: string }[] = [
-    { value: 'news', label: 'Market News' },
-    { value: 'technical', label: 'Technical Analysis' },
-    { value: 'memes', label: 'Memes & Fun' },
+  const contentOptions: { value: 'Market News' | 'Charts' | 'Social' | 'Fun'; label: string }[] = [
+    { value: 'Market News', label: 'Market News' },
+    { value: 'Charts', label: 'Charts' },
+    { value: 'Social', label: 'Social' },
+    { value: 'Fun', label: 'Fun' },
   ];
 
   const toggleCoin = (coin: string) => {
@@ -29,8 +30,8 @@ const Onboarding: React.FC = () => {
     );
   };
 
-  const toggleContent = (content: 'news' | 'technical' | 'memes') => {
-    setContentFocus((prev) =>
+  const toggleContent = (content: 'Market News' | 'Charts' | 'Social' | 'Fun') => {
+    setContentPreferences((prev) =>
       prev.includes(content) ? prev.filter((c) => c !== content) : [...prev, content]
     );
   };
@@ -40,8 +41,8 @@ const Onboarding: React.FC = () => {
     try {
       const preferences: UserPreferences = {
         favoriteCoins,
-        riskTolerance,
-        contentFocus,
+        investorType,
+        contentPreferences,
       };
 
       const response = await client.put('/user/preferences', { preferences });
@@ -107,19 +108,19 @@ const Onboarding: React.FC = () => {
 
         {step === 2 && (
           <div>
-            <h2 className="text-xl font-semibold mb-4">What's your risk tolerance?</h2>
+            <h2 className="text-xl font-semibold mb-4">What type of investor are you?</h2>
             <div className="space-y-3 mb-6">
-              {(['conservative', 'moderate', 'aggressive'] as const).map((risk) => (
+              {(['HODLer', 'Day Trader', 'NFT Collector'] as const).map((type) => (
                 <button
-                  key={risk}
-                  onClick={() => setRiskTolerance(risk)}
+                  key={type}
+                  onClick={() => setInvestorType(type)}
                   className={`w-full p-4 text-left rounded border transition-colors ${
-                    riskTolerance === risk
+                    investorType === type
                       ? 'bg-blue-100 border-blue-500 text-blue-700'
                       : 'bg-white border-gray-300 hover:bg-gray-50'
                   }`}
                 >
-                  <span className="capitalize font-medium">{risk}</span>
+                  <span className="font-medium">{type}</span>
                 </button>
               ))}
             </div>
@@ -149,7 +150,7 @@ const Onboarding: React.FC = () => {
                   key={option.value}
                   onClick={() => toggleContent(option.value)}
                   className={`w-full p-4 text-left rounded border transition-colors ${
-                    contentFocus.includes(option.value)
+                    contentPreferences.includes(option.value)
                       ? 'bg-blue-100 border-blue-500 text-blue-700'
                       : 'bg-white border-gray-300 hover:bg-gray-50'
                   }`}
@@ -167,7 +168,7 @@ const Onboarding: React.FC = () => {
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={loading || contentFocus.length === 0}
+                disabled={loading || contentPreferences.length === 0}
                 className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
               >
                 {loading ? 'Saving...' : 'Finish'}

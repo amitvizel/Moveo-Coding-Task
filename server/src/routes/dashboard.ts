@@ -4,7 +4,7 @@ import { CoinGeckoService } from '../services/coingecko.js';
 import { CryptoPanicService } from '../services/cryptopanic.js';
 import { MemeService } from '../services/meme.js';
 import { AIService } from '../services/ai.js';
-import { CacheService, CACHE_TTL_MS, MEME_CACHE_TTL_MS, CacheType } from '../services/cache.js';
+import { CacheService, CACHE_TTL_MS, MEME_CACHE_TTL_MS, AI_INSIGHT_CACHE_TTL_MS, CacheType } from '../services/cache.js';
 import prisma from '../prisma.js';
 
 const router = express.Router();
@@ -32,7 +32,7 @@ router.get('/data', authenticateToken, async (req: AuthRequest, res) => {
     let prices = await CacheService.getCachedDataByType(userId, CacheType.prices, CACHE_TTL_MS);
     let news = await CacheService.getCachedDataByType(userId, CacheType.news, CACHE_TTL_MS);
     let meme = await CacheService.getCachedDataByType(userId, CacheType.meme, MEME_CACHE_TTL_MS);
-    let aiInsight = await CacheService.getCachedDataByType(userId, CacheType.aiInsight, CACHE_TTL_MS);
+    let aiInsight = await CacheService.getCachedDataByType(userId, CacheType.aiInsight, AI_INSIGHT_CACHE_TTL_MS);
 
     // Fetch prices if cache is stale or missing
     if (!prices) {
@@ -54,14 +54,9 @@ router.get('/data', authenticateToken, async (req: AuthRequest, res) => {
       console.log('[Dashboard] Using cached news for user:', userId);
     }
 
-    // Fetch meme if cache is stale or missing
-    if (!meme) {
-      console.log('[Dashboard] Fetching meme for user:', userId);
-      meme = await MemeService.getMeme();
-      await CacheService.setCachedDataByType(userId, CacheType.meme, meme);
-    } else {
-      console.log('[Dashboard] Using cached meme for user:', userId);
-    }
+    // Always fetch a fresh meme on every dashboard refresh
+    console.log('[Dashboard] Fetching fresh meme for user:', userId);
+    meme = await MemeService.getMeme();
 
     // Fetch AI insight if cache is stale or missing
     // Note: AI insight depends on prices and news, so we need fresh data
