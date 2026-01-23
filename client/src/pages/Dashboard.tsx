@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import client from '../api/client';
 import CoinPrices from '../components/CoinPrices';
 import MarketNews from '../components/MarketNews';
 import AIInsight from '../components/AIInsight';
 import MemeOfTheDay from '../components/MemeOfTheDay';
 import EditPreferencesModal from '../components/EditPreferencesModal';
+import ThemeSwitcherModal from '../components/ThemeSwitcherModal';
 
 interface DashboardData {
   prices: Record<string, { usd: number; usd_24h_change: number }>;
@@ -31,11 +33,13 @@ const MEME_DATE_KEY = 'crypto_advisor_meme_date';
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
+  const { theme } = useTheme();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [lastFetch, setLastFetch] = useState<number>(0);
   const [isEditPreferencesOpen, setIsEditPreferencesOpen] = useState(false);
+  const [isThemeSwitcherOpen, setIsThemeSwitcherOpen] = useState(false);
 
   const getTodayDate = (): string => {
     return new Date().toISOString().split('T')[0]!;
@@ -132,10 +136,10 @@ const Dashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-skin-base text-skin-text-primary">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading your personalized dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-skin-primary mx-auto"></div>
+          <p className="mt-4 text-skin-text-secondary">Loading your personalized dashboard...</p>
         </div>
       </div>
     );
@@ -143,7 +147,7 @@ const Dashboard: React.FC = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-skin-base">
         <div className="text-center p-8 bg-red-50 rounded-lg">
           <p className="text-red-600 font-semibold">{error}</p>
           <button
@@ -157,18 +161,28 @@ const Dashboard: React.FC = () => {
     );
   }
 
+  // Dynamic card classes
+  const cardClasses = "bg-skin-card p-6 rounded-[var(--radius-card)] shadow-[var(--shadow-card)] border-[length:var(--border-width-card)] border-skin-border transition-all duration-300";
+  const memeCardClasses = "h-full bg-skin-card rounded-[var(--radius-card)] shadow-[var(--shadow-card)] border-[length:var(--border-width-card)] border-skin-border transition-all duration-300 overflow-hidden";
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-skin-base text-skin-text-primary transition-colors duration-300">
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="bg-skin-card shadow-[var(--shadow-card)] border-b-[length:var(--border-width-card)] border-skin-border transition-all duration-300 relative z-10">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-skin-text-primary">
             Crypto Advisor Dashboard
           </h1>
           <div className="flex items-center gap-4">
             <button
+              onClick={() => setIsThemeSwitcherOpen(true)}
+              className="px-4 py-2 text-sm bg-skin-primary-light text-skin-primary-text rounded hover:opacity-80 transition-all border border-skin-border"
+            >
+              Theme
+            </button>
+            <button
               onClick={() => setIsEditPreferencesOpen(true)}
-              className="px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+              className="px-4 py-2 text-sm bg-skin-primary-light text-skin-primary-text rounded hover:opacity-80 transition-all border border-skin-border"
             >
               Edit Preferences
             </button>
@@ -186,48 +200,84 @@ const Dashboard: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {/* Welcome Message */}
         <div className="mb-8">
-          <h2 className="text-xl text-gray-600">
+          <h2 className="text-xl text-skin-text-secondary">
             Welcome back, {user?.name || user?.email}!
           </h2>
-          <p className="text-gray-500 mt-1">
+          <p className="text-skin-text-muted mt-1">
             Here's your personalized crypto market overview
           </p>
           {lastFetch > 0 && (
-            <p className="text-xs text-gray-400 mt-2">
+            <p className="text-xs text-skin-text-muted mt-2">
               Last updated: {formatLastUpdated(lastFetch)}
             </p>
           )}
         </div>
 
-        {/* Dashboard Grid - Will hold 4 components */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Coin Prices Component */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4 flex items-center">
-              <span className="mr-2">💰</span>
-              Your Coins
-            </h3>
-            <CoinPrices prices={data?.prices || {}} />
-          </div>
+        {/* Layout Conditional Logic */}
+        {theme === 'meme' ? (
+          <div className="flex flex-col gap-6">
+            {/* Hero Meme Card */}
+            <div className={`${memeCardClasses} min-h-[400px]`}>
+              <MemeOfTheDay meme={data?.meme || null} />
+            </div>
 
-          {/* Market News Component */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4 flex items-center">
-              <span className="mr-2">📰</span>
-              Market News
-            </h3>
-            <MarketNews news={data?.news || []} />
-          </div>
+            {/* Other Components Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Coin Prices */}
+              <div className={cardClasses}>
+                <h3 className="text-lg font-semibold mb-4 flex items-center text-skin-text-primary">
+                  <span className="mr-2">💰</span>
+                  Your Coins
+                </h3>
+                <CoinPrices prices={data?.prices || {}} />
+              </div>
 
-          {/* AI Insight Component */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <AIInsight insight={data?.aiInsight || null} />
-          </div>
+              {/* Market News */}
+              <div className={cardClasses}>
+                <h3 className="text-lg font-semibold mb-4 flex items-center text-skin-text-primary">
+                  <span className="mr-2">📰</span>
+                  Market News
+                </h3>
+                <MarketNews news={data?.news || []} />
+              </div>
 
-          <div className="h-full">
-            <MemeOfTheDay meme={data?.meme || null} />
+              {/* AI Insight */}
+              <div className={`${cardClasses} p-0 overflow-hidden`}>
+                <AIInsight insight={data?.aiInsight || null} />
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          /* Standard Layout */
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Coin Prices Component */}
+            <div className={cardClasses}>
+              <h3 className="text-lg font-semibold mb-4 flex items-center text-skin-text-primary">
+                <span className="mr-2">💰</span>
+                Your Coins
+              </h3>
+              <CoinPrices prices={data?.prices || {}} />
+            </div>
+
+            {/* Market News Component */}
+            <div className={cardClasses}>
+              <h3 className="text-lg font-semibold mb-4 flex items-center text-skin-text-primary">
+                <span className="mr-2">📰</span>
+                Market News
+              </h3>
+              <MarketNews news={data?.news || []} />
+            </div>
+
+            {/* AI Insight Component */}
+            <div className={`${cardClasses} p-0 overflow-hidden`}>
+              <AIInsight insight={data?.aiInsight || null} />
+            </div>
+
+            <div className={memeCardClasses}>
+              <MemeOfTheDay meme={data?.meme || null} />
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Edit Preferences Modal */}
@@ -235,6 +285,12 @@ const Dashboard: React.FC = () => {
         isOpen={isEditPreferencesOpen}
         onClose={() => setIsEditPreferencesOpen(false)}
         onSuccess={handlePreferencesSuccess}
+      />
+      
+      {/* Theme Switcher Modal */}
+      <ThemeSwitcherModal
+        isOpen={isThemeSwitcherOpen}
+        onClose={() => setIsThemeSwitcherOpen(false)}
       />
     </div>
   );

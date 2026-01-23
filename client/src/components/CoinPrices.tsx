@@ -32,20 +32,20 @@ const CoinPrices: React.FC<CoinPricesProps> = ({ prices }) => {
   const getChangeColor = (change: number) => {
     if (change > 0) return 'text-green-600';
     if (change < 0) return 'text-red-600';
-    return 'text-gray-600';
+    return 'text-skin-text-muted';
   };
 
   const getChangeBgColor = (change: number) => {
     if (change > 0) return 'bg-green-50';
     if (change < 0) return 'bg-red-50';
-    return 'bg-gray-50';
+    return 'bg-skin-base';
   };
 
   const coinEntries = Object.entries(prices);
 
   if (coinEntries.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
+      <div className="text-center py-8 text-skin-text-muted">
         <p>No coin data available</p>
         <p className="text-sm mt-2">Select your favorite coins in settings</p>
       </div>
@@ -63,7 +63,7 @@ const CoinPrices: React.FC<CoinPricesProps> = ({ prices }) => {
         return (
           <div
             key={coinId}
-            className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+            className="flex items-center justify-between p-4 bg-skin-base rounded-lg hover:opacity-90 transition-opacity border border-skin-border"
           >
             {/* Coin Info */}
             <div className="flex items-center space-x-3">
@@ -71,14 +71,14 @@ const CoinPrices: React.FC<CoinPricesProps> = ({ prices }) => {
                 {displayInfo.symbol.slice(0, 3)}
               </div>
               <div>
-                <p className="font-semibold text-gray-900">{displayInfo.name}</p>
-                <p className="text-sm text-gray-500">{displayInfo.symbol}</p>
+                <p className="font-semibold text-skin-text-primary">{displayInfo.name}</p>
+                <p className="text-sm text-skin-text-muted">{displayInfo.symbol}</p>
               </div>
             </div>
 
             {/* Price and Change */}
             <div className="text-right">
-              <p className="font-semibold text-gray-900">
+              <p className="font-semibold text-skin-text-primary">
                 {formatPrice(data.usd)}
               </p>
               <span

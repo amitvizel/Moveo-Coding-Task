@@ -30,7 +30,7 @@ const MarketNews: React.FC<MarketNewsProps> = ({ news }) => {
 
   if (!news || news.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
+      <div className="text-center py-8 text-skin-text-muted">
         <p>No news available at the moment</p>
         <p className="text-sm mt-2">Check back later for updates</p>
       </div>
@@ -44,10 +44,10 @@ const MarketNews: React.FC<MarketNewsProps> = ({ news }) => {
         const content = (
           <div className="flex items-start justify-between">
             <div className="flex-1 mr-3">
-              <h4 className="font-medium text-gray-900 mb-1 line-clamp-2 hover:text-blue-600">
+              <h4 className="font-medium text-skin-text-primary mb-1 line-clamp-2 hover:text-skin-primary transition-colors">
                 {item.title}
               </h4>
-              <div className="flex items-center space-x-2 text-xs text-gray-500">
+              <div className="flex items-center space-x-2 text-xs text-skin-text-muted">
                 <span className="flex items-center">
                   <span className="mr-1">🌐</span>
                   {item.domain}
@@ -61,7 +61,7 @@ const MarketNews: React.FC<MarketNewsProps> = ({ news }) => {
             </div>
             <div className="flex flex-col items-end space-y-2 flex-shrink-0">
               {hasUrl && (
-                <div className="text-gray-400 hover:text-blue-600">
+                <div className="text-skin-text-muted hover:text-skin-primary transition-colors">
                   <svg
                     className="w-5 h-5"
                     fill="none"
@@ -92,7 +92,7 @@ const MarketNews: React.FC<MarketNewsProps> = ({ news }) => {
               href={item.url!}
               target="_blank"
               rel="noopener noreferrer"
-              className="block p-4 bg-gray-50 rounded-lg hover:bg-blue-50 hover:shadow-md transition-all border border-transparent hover:border-blue-200"
+              className="block p-4 bg-skin-base rounded-lg hover:shadow-md transition-all border border-skin-border hover:border-skin-primary"
             >
               {content}
             </a>
@@ -102,7 +102,7 @@ const MarketNews: React.FC<MarketNewsProps> = ({ news }) => {
         return (
           <div
             key={item.id}
-            className="block p-4 bg-gray-50 rounded-lg"
+            className="block p-4 bg-skin-base rounded-lg border border-skin-border"
           >
             {content}
           </div>

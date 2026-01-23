@@ -15,8 +15,8 @@ interface MemeOfTheDayProps {
 const MemeOfTheDay: React.FC<MemeOfTheDayProps> = ({ meme }) => {
   if (!meme) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow min-h-[300px] flex items-center justify-center">
-        <div className="text-center text-gray-500">
+      <div className="p-6 h-full flex items-center justify-center">
+        <div className="text-center text-skin-text-muted">
           <p>No meme available today</p>
         </div>
       </div>
@@ -24,9 +24,9 @@ const MemeOfTheDay: React.FC<MemeOfTheDayProps> = ({ meme }) => {
   }
 
   return (
-    <div className="relative bg-white rounded-lg shadow overflow-hidden h-full">
+    <div className="relative h-full flex flex-col">
       {/* Decorative gradient background for header */}
-      <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-br from-yellow-100 via-orange-50 to-red-50 opacity-70"></div>
+      <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-br from-yellow-100 via-orange-50 to-red-50 opacity-70 pointer-events-none"></div>
       
       <div className="relative p-6 flex flex-col h-full">
         {/* Header */}
@@ -48,10 +48,10 @@ const MemeOfTheDay: React.FC<MemeOfTheDayProps> = ({ meme }) => {
               </svg>
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+              <h3 className="text-sm font-semibold text-skin-text-secondary uppercase tracking-wide">
                 Meme of the Day
               </h3>
-              <p className="text-xs text-gray-500">Daily dose of fun</p>
+              <p className="text-xs text-skin-text-muted">Daily dose of fun</p>
             </div>
           </div>
           <FeedbackButtons 
@@ -61,8 +61,8 @@ const MemeOfTheDay: React.FC<MemeOfTheDayProps> = ({ meme }) => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 flex flex-col">
-          <div className="relative flex-1 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center min-h-[200px] group cursor-pointer">
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="relative flex-1 bg-skin-base rounded-[var(--radius-card)] overflow-hidden flex items-center justify-center min-h-[200px] group cursor-pointer border-[length:var(--border-width-card)] border-skin-border">
             <a 
               href={meme.permalink} 
               target="_blank" 
@@ -72,7 +72,7 @@ const MemeOfTheDay: React.FC<MemeOfTheDayProps> = ({ meme }) => {
               <img 
                 src={meme.url} 
                 alt={meme.title}
-                className="w-full h-full object-contain max-h-[400px]"
+                className="w-full h-full object-contain max-h-[500px]"
                 loading="lazy"
               />
               {/* Hover overlay */}
@@ -84,7 +84,7 @@ const MemeOfTheDay: React.FC<MemeOfTheDayProps> = ({ meme }) => {
             </a>
           </div>
 
-          <div className="mt-3 flex justify-between items-center text-xs text-gray-500 px-1">
+          <div className="mt-3 flex justify-between items-center text-xs text-skin-text-muted px-1">
             <span>By u/{meme.author}</span>
           </div>
         </div>
