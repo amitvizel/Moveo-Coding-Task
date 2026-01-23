@@ -5,7 +5,6 @@ import type { Prisma } from '@prisma/client';
 export const CacheType = {
   prices: 'prices' as const,
   news: 'news' as const,
-  meme: 'meme' as const,
   aiInsight: 'aiInsight' as const,
 } as const;
 
@@ -16,7 +15,7 @@ export type CacheType = typeof CacheType[keyof typeof CacheType];
 type CachedData = Prisma.JsonValue;
 
 // Re-export cache TTL constants from utils for backward compatibility
-export { CACHE_TTL_MS, MEME_CACHE_TTL_MS, AI_INSIGHT_CACHE_TTL_MS } from '../utils/constants.js';
+export { CACHE_TTL_MS, AI_INSIGHT_CACHE_TTL_MS } from '../utils/constants.js';
 
 /**
  * Checks if two dates are on the same calendar day (ignoring time).

@@ -15,5 +15,4 @@ export const REDDIT_POST_LIMIT = 50;
 
 // Cache TTL constants (in milliseconds)
 export const CACHE_TTL_MS = 60 * 1000; // 1 minute
-export const MEME_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 export const AI_INSIGHT_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours

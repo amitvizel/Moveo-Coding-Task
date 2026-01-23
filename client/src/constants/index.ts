@@ -13,7 +13,7 @@ export const INVESTOR_TYPES = ['HODLer', 'Day Trader', 'NFT Collector'] as const
 
 export type InvestorType = typeof INVESTOR_TYPES[number];
 
-export interface CoinDisplayInfo {
+interface CoinDisplayInfo {
   name: string;
   symbol: string;
 }

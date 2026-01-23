@@ -2,7 +2,7 @@ import { CoinGeckoService } from './coingecko.js';
 import { CryptoPanicService } from './cryptopanic.js';
 import { MemeService } from './meme.js';
 import { AIService } from './ai.js';
-import { CacheService, CACHE_TTL_MS, MEME_CACHE_TTL_MS, AI_INSIGHT_CACHE_TTL_MS, CacheType } from './cache.js';
+import { CacheService, CACHE_TTL_MS, AI_INSIGHT_CACHE_TTL_MS, CacheType } from './cache.js';
 import prisma from '../prisma.js';
 import type { UserPreferences } from '../types/preferences.js';
 
