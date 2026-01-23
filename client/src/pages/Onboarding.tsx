@@ -1,66 +1,29 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import client from '../api/client';
-import { useAuth } from '../context/AuthContext';
-import type { UserPreferences } from '../context/AuthContext';
+import { usePreferencesForm } from '../hooks/usePreferencesForm';
 
 const Onboarding: React.FC = () => {
   const navigate = useNavigate();
-  const { user, updateUser } = useAuth();
   const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
 
-  // Form State
-  const [favoriteCoins, setFavoriteCoins] = useState<string[]>([]);
-  const [investorType, setInvestorType] = useState<UserPreferences['investorType']>('HODLer');
-  const [contentPreferences, setContentPreferences] = useState<UserPreferences['contentPreferences']>([]);
-
-  // Available Options
-  const coinOptions = ['BTC', 'ETH', 'SOL', 'ADA', 'DOGE', 'XRP', 'DOT', 'MATIC'];
-  const contentOptions: { value: 'Market News' | 'Charts' | 'Social' | 'Fun'; label: string }[] = [
-    { value: 'Market News', label: 'Market News' },
-    { value: 'Charts', label: 'Charts' },
-    { value: 'Social', label: 'Social' },
-    { value: 'Fun', label: 'Fun' },
-  ];
-
-  const toggleCoin = (coin: string) => {
-    setFavoriteCoins((prev) =>
-      prev.includes(coin) ? prev.filter((c) => c !== coin) : [...prev, coin]
-    );
-  };
-
-  const toggleContent = (content: 'Market News' | 'Charts' | 'Social' | 'Fun') => {
-    setContentPreferences((prev) =>
-      prev.includes(content) ? prev.filter((c) => c !== content) : [...prev, content]
-    );
-  };
-
-  const handleSubmit = async () => {
-    setLoading(true);
-    try {
-      const preferences: UserPreferences = {
-        favoriteCoins,
-        investorType,
-        contentPreferences,
-      };
-
-      const response = await client.put('/user/preferences', { preferences });
-      
-      // Update local user state
-      if (user) {
-        updateUser({ ...user, preferences });
-      }
-      
-      console.log('Preferences updated:', response.data);
+  const {
+    favoriteCoins,
+    investorType,
+    contentPreferences,
+    loading,
+    error,
+    setInvestorType,
+    toggleCoin,
+    toggleContent,
+    handleSubmit,
+    coinOptions,
+    contentOptions,
+    investorTypes,
+  } = usePreferencesForm({
+    onSuccess: () => {
       navigate('/');
-    } catch (error) {
-      console.error('Failed to save preferences', error);
-      alert('Failed to save preferences. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
@@ -110,7 +73,7 @@ const Onboarding: React.FC = () => {
           <div>
             <h2 className="text-xl font-semibold mb-4">What type of investor are you?</h2>
             <div className="space-y-3 mb-6">
-              {(['HODLer', 'Day Trader', 'NFT Collector'] as const).map((type) => (
+              {investorTypes.map((type) => (
                 <button
                   key={type}
                   onClick={() => setInvestorType(type)}
@@ -144,6 +107,11 @@ const Onboarding: React.FC = () => {
         {step === 3 && (
           <div>
             <h2 className="text-xl font-semibold mb-4">What content do you want to see?</h2>
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-600 text-sm">
+                {error}
+              </div>
+            )}
             <div className="space-y-3 mb-6">
               {contentOptions.map((option) => (
                 <button

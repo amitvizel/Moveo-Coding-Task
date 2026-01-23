@@ -1,21 +1,11 @@
 import React from 'react';
+import { COIN_DISPLAY_NAMES } from '../constants';
 
 interface CoinPricesProps {
   prices: Record<string, { usd: number; usd_24h_change: number }>;
 }
 
 const CoinPrices: React.FC<CoinPricesProps> = ({ prices }) => {
-  // Map CoinGecko IDs to display names and symbols
-  const coinDisplayNames: Record<string, { name: string; symbol: string }> = {
-    bitcoin: { name: 'Bitcoin', symbol: 'BTC' },
-    ethereum: { name: 'Ethereum', symbol: 'ETH' },
-    solana: { name: 'Solana', symbol: 'SOL' },
-    cardano: { name: 'Cardano', symbol: 'ADA' },
-    dogecoin: { name: 'Dogecoin', symbol: 'DOGE' },
-    ripple: { name: 'XRP', symbol: 'XRP' },
-    polkadot: { name: 'Polkadot', symbol: 'DOT' },
-    'matic-network': { name: 'Polygon', symbol: 'MATIC' },
-  };
 
   const formatPrice = (price: number) => {
     if (price >= 1) {
@@ -55,7 +45,7 @@ const CoinPrices: React.FC<CoinPricesProps> = ({ prices }) => {
   return (
     <div className="space-y-3">
       {coinEntries.map(([coinId, data]) => {
-        const displayInfo = coinDisplayNames[coinId] || { 
+        const displayInfo = COIN_DISPLAY_NAMES[coinId] || { 
           name: coinId.charAt(0).toUpperCase() + coinId.slice(1), 
           symbol: coinId.toUpperCase().slice(0, 4) 
         };

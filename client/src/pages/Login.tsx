@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { getErrorMessage } from '../types/errors';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -17,10 +18,9 @@ const Login: React.FC = () => {
       const response = await client.post('/auth/login', { email, password });
       login(response.data.token, response.data.user);
       navigate('/');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Login failed', err);
-      // Backend returns { error: 'Message' }, so we check err.response.data.error
-      setError(err.response?.data?.error || 'Login failed');
+      setError(getErrorMessage(err, 'Login failed'));
     }
   };
 

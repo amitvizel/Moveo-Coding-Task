@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import client from '../api/client';
+import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import type { UserPreferences } from '../context/AuthContext';
+import { usePreferencesForm } from '../hooks/usePreferencesForm';
 
 interface EditPreferencesModalProps {
   isOpen: boolean;
@@ -10,81 +9,29 @@ interface EditPreferencesModalProps {
 }
 
 const EditPreferencesModal: React.FC<EditPreferencesModalProps> = ({ isOpen, onClose, onSuccess }) => {
-  const { user, updateUser } = useAuth();
-  const [loading, setLoading] = useState(false);
-
-  // Form State
-  const [favoriteCoins, setFavoriteCoins] = useState<string[]>([]);
-  const [investorType, setInvestorType] = useState<UserPreferences['investorType']>('HODLer');
-  const [contentPreferences, setContentPreferences] = useState<UserPreferences['contentPreferences']>([]);
-
-  // Initialize state from user preferences when modal opens
-  useEffect(() => {
-    if (isOpen && user?.preferences) {
-      setFavoriteCoins(user.preferences.favoriteCoins || []);
-      setInvestorType(user.preferences.investorType || 'HODLer');
-      setContentPreferences(user.preferences.contentPreferences || []);
-    }
-  }, [isOpen, user]);
-
-  if (!isOpen) return null;
-
-  // Available Options
-  const coinOptions = ['BTC', 'ETH', 'SOL', 'ADA', 'DOGE', 'XRP', 'DOT', 'MATIC'];
-  const contentOptions: { value: 'Market News' | 'Charts' | 'Social' | 'Fun'; label: string }[] = [
-    { value: 'Market News', label: 'Market News' },
-    { value: 'Charts', label: 'Charts' },
-    { value: 'Social', label: 'Social' },
-    { value: 'Fun', label: 'Fun' },
-  ];
-
-  const toggleCoin = (coin: string) => {
-    setFavoriteCoins((prev) =>
-      prev.includes(coin) ? prev.filter((c) => c !== coin) : [...prev, coin]
-    );
-  };
-
-  const toggleContent = (content: 'Market News' | 'Charts' | 'Social' | 'Fun') => {
-    setContentPreferences((prev) =>
-      prev.includes(content) ? prev.filter((c) => c !== content) : [...prev, content]
-    );
-  };
-
-  const handleSubmit = async () => {
-    if (favoriteCoins.length === 0) {
-      alert('Please select at least one coin.');
-      return;
-    }
-    if (contentPreferences.length === 0) {
-      alert('Please select at least one content type.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const preferences: UserPreferences = {
-        favoriteCoins,
-        investorType,
-        contentPreferences,
-      };
-
-      const response = await client.put('/user/preferences', { preferences });
-      
-      // Update local user state
-      if (user) {
-        updateUser({ ...user, preferences });
-      }
-      
-      console.log('Preferences updated:', response.data);
+  const { user } = useAuth();
+  const {
+    favoriteCoins,
+    investorType,
+    contentPreferences,
+    loading,
+    error,
+    setInvestorType,
+    toggleCoin,
+    toggleContent,
+    handleSubmit,
+    coinOptions,
+    contentOptions,
+    investorTypes,
+  } = usePreferencesForm({
+    initialPreferences: isOpen ? (user?.preferences || null) : null,
+    onSuccess: () => {
       onSuccess();
       onClose();
-    } catch (error) {
-      console.error('Failed to save preferences', error);
-      alert('Failed to save preferences. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
@@ -99,6 +46,12 @@ const EditPreferencesModal: React.FC<EditPreferencesModalProps> = ({ isOpen, onC
         </div>
 
         <div className="p-6 space-y-8">
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded text-red-600 text-sm">
+              {error}
+            </div>
+          )}
+
           {/* Favorite Coins Section */}
           <div>
             <h3 className="text-lg font-semibold mb-3">Favorite Coins</h3>
@@ -126,7 +79,7 @@ const EditPreferencesModal: React.FC<EditPreferencesModalProps> = ({ isOpen, onC
           <div>
             <h3 className="text-lg font-semibold mb-3">Investor Type</h3>
             <div className="flex flex-col sm:flex-row gap-3">
-              {(['HODLer', 'Day Trader', 'NFT Collector'] as const).map((type) => (
+              {investorTypes.map((type) => (
                 <button
                   key={type}
                   onClick={() => setInvestorType(type)}

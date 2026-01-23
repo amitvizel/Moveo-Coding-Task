@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
+import { getErrorMessage } from '../types/errors';
 
 const Signup: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -15,10 +16,9 @@ const Signup: React.FC = () => {
     try {
       await client.post('/auth/register', { email, password, name });
       navigate('/login');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Signup failed', err);
-      // Backend returns { error: 'Message' }, so we check err.response.data.error
-      setError(err.response?.data?.error || 'Signup failed');
+      setError(getErrorMessage(err, 'Signup failed'));
     }
   };
 

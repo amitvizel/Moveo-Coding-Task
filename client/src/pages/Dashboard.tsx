@@ -8,6 +8,8 @@ import AIInsight from '../components/AIInsight';
 import MemeOfTheDay from '../components/MemeOfTheDay';
 import EditPreferencesModal from '../components/EditPreferencesModal';
 import ThemeSwitcherModal from '../components/ThemeSwitcherModal';
+import { getCardClassName, getMemeCardClassName, getHeaderClassName } from '../utils/classNames';
+import { getErrorMessage } from '../types/errors';
 
 interface DashboardData {
   prices: Record<string, { usd: number; usd_24h_change: number }>;
@@ -77,9 +79,9 @@ const Dashboard: React.FC = () => {
         
         setData(response.data);
         setLastFetch(now);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Failed to fetch dashboard data:', err);
-        setError(err.response?.data?.error || 'Failed to load dashboard');
+        setError(getErrorMessage(err, 'Failed to load dashboard'));
       } finally {
         setLoading(false);
         isFetchingRef.current = false;
@@ -106,7 +108,11 @@ const Dashboard: React.FC = () => {
         <div className="text-center p-8 bg-red-50 rounded-lg">
           <p className="text-red-600 font-semibold">{error}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => {
+              setError('');
+              setLastFetch(0);
+              setData(null);
+            }}
             className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
           >
             Try Again
@@ -116,14 +122,10 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  // Dynamic card classes
-  const cardClasses = "bg-skin-card p-6 rounded-[var(--radius-card)] shadow-[var(--shadow-card)] border-[length:var(--border-width-card)] border-skin-border transition-all duration-300";
-  const memeCardClasses = "h-full bg-skin-card rounded-[var(--radius-card)] shadow-[var(--shadow-card)] border-[length:var(--border-width-card)] border-skin-border transition-all duration-300 overflow-hidden";
-
   return (
     <div className="min-h-screen bg-skin-base text-skin-text-primary transition-colors duration-300">
       {/* Header */}
-      <header className="bg-skin-card shadow-[var(--shadow-card)] border-b-[length:var(--border-width-card)] border-skin-border transition-all duration-300 relative z-10">
+      <header className={getHeaderClassName()}>
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-skin-text-primary">
             Crypto Advisor Dashboard
@@ -172,14 +174,14 @@ const Dashboard: React.FC = () => {
         {theme === 'meme' ? (
           <div className="flex flex-col gap-6">
             {/* Hero Meme Card */}
-            <div className={`${memeCardClasses} min-h-[400px]`}>
+            <div className={getMemeCardClassName('min-h-[400px]')}>
               <MemeOfTheDay meme={data?.meme || null} />
             </div>
 
             {/* Other Components Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Coin Prices */}
-              <div className={cardClasses}>
+              <div className={getCardClassName()}>
                 <h3 className="text-lg font-semibold mb-4 flex items-center text-skin-text-primary">
                   <span className="mr-2">💰</span>
                   Your Coins
@@ -188,7 +190,7 @@ const Dashboard: React.FC = () => {
               </div>
 
               {/* Market News */}
-              <div className={cardClasses}>
+              <div className={getCardClassName()}>
                 <h3 className="text-lg font-semibold mb-4 flex items-center text-skin-text-primary">
                   <span className="mr-2">📰</span>
                   Market News
@@ -197,7 +199,7 @@ const Dashboard: React.FC = () => {
               </div>
 
               {/* AI Insight */}
-              <div className={`${cardClasses} p-0 overflow-hidden`}>
+              <div className={getCardClassName('p-0 overflow-hidden')}>
                 <AIInsight insight={data?.aiInsight || null} />
               </div>
             </div>
@@ -206,7 +208,7 @@ const Dashboard: React.FC = () => {
           /* Standard Layout */
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Coin Prices Component */}
-            <div className={cardClasses}>
+            <div className={getCardClassName()}>
               <h3 className="text-lg font-semibold mb-4 flex items-center text-skin-text-primary">
                 <span className="mr-2">💰</span>
                 Your Coins
@@ -215,7 +217,7 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* Market News Component */}
-            <div className={cardClasses}>
+            <div className={getCardClassName()}>
               <h3 className="text-lg font-semibold mb-4 flex items-center text-skin-text-primary">
                 <span className="mr-2">📰</span>
                 Market News
@@ -224,11 +226,11 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* AI Insight Component */}
-            <div className={`${cardClasses} p-0 overflow-hidden`}>
+            <div className={getCardClassName('p-0 overflow-hidden')}>
               <AIInsight insight={data?.aiInsight || null} />
             </div>
 
-            <div className={memeCardClasses}>
+            <div className={getMemeCardClassName()}>
               <MemeOfTheDay meme={data?.meme || null} />
             </div>
           </div>
