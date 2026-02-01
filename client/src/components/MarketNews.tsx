@@ -45,10 +45,11 @@ const MarketNews: React.FC<MarketNewsProps> = ({ news }) => {
   
   return (
     <div className={`space-y-3 ${maxHeightClass} overflow-y-auto pb-4`}>
-      {news.map((item) => {
+      {news.map((item, index) => {
+        const itemId = item.id ?? index;
         return (
           <div
-            key={item.id}
+            key={itemId}
             className="block p-4 bg-skin-base rounded-lg border border-skin-border"
           >
             <div className="flex items-start justify-between">
@@ -71,7 +72,7 @@ const MarketNews: React.FC<MarketNewsProps> = ({ news }) => {
               <div className="flex flex-col items-end space-y-2 flex-shrink-0">
                 <FeedbackButtons 
                   contentType={FeedbackContentType.NEWS} 
-                  contentId={item.id.toString()} 
+                  contentId={String(itemId)} 
                 />
               </div>
             </div>

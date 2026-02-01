@@ -37,11 +37,16 @@ export class CryptoPanicService {
       }
 
       const response = await axios.get(CRYPTOPANIC_API_URL, { params });
-      
-      // Transform the response to a simpler format
+      const raw = response.data?.results ?? response.data?.data ?? response.data;
+      const resultsArray = Array.isArray(raw) ? raw : response.data?.results || [];
+
+      // CryptoPanic API v2 returns: title, description, published_at, created_at, kind
+      // (no id, url, or domain). Older/v1 format may include id, pk, url, source.
       interface CryptoPanicItem {
-        id: number;
+        id?: number;
+        pk?: number;
         title: string;
+        description?: string;
         url?: string;
         source?: {
           url?: string;
@@ -51,22 +56,25 @@ export class CryptoPanicService {
         };
         link?: string;
         domain?: string;
-        created_at: string;
+        created_at?: string;
+        published_at?: string;
       }
 
-      return response.data.results.map((item: CryptoPanicItem) => {
-        // CryptoPanic API might use different field names - try multiple possibilities
-        const url = item.url || item.source?.url || item.link || item.source?.link || null;
-        const domain = item.domain || item.source?.domain || item.source?.name || 'Unknown';
-        
-        return {
-          id: item.id,
-          title: item.title,
-          url: url || `https://cryptopanic.com/news/${item.id}/`, // Fallback to CryptoPanic news page
-          domain: domain,
-          created_at: item.created_at,
-        };
-      });
+      return resultsArray
+        .filter((item: CryptoPanicItem) => item?.title != null)
+        .map((item: CryptoPanicItem, index: number) => {
+          const url = item.url || item.source?.url || item.link || item.source?.link || null;
+          const domain = item.domain || item.source?.domain || item.source?.name || 'CryptoPanic';
+          const dateStr = item.created_at || item.published_at || new Date().toISOString();
+          const postId = item.id ?? item.pk ?? index;
+          return {
+            id: postId,
+            title: item.title,
+            url: url || `https://cryptopanic.com/`,
+            domain: domain,
+            created_at: dateStr,
+          };
+        });
     } catch (error) {
       // Log full error response for debugging
       if (axios.isAxiosError(error)) {
